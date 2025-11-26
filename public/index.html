@@ -50,24 +50,6 @@
             animation: bgFloat 22s ease-in-out infinite alternate;
         }
 
-        body::after {
-            content: "";
-            position: fixed;
-            inset: -50%;
-            background: conic-gradient(
-                from 120deg,
-                rgba(129, 140, 248, 0.16),
-                rgba(56, 189, 248, 0.06),
-                rgba(244, 114, 182, 0.12),
-                rgba(45, 212, 191, 0.09),
-                rgba(129, 140, 248, 0.16)
-            );
-            opacity: 0.35;
-            mix-blend-mode: screen;
-            z-index: -3;
-            animation: gradientSpin 32s linear infinite;
-        }
-
         .app-container {
             min-height: 100vh;
             display: flex;
@@ -76,7 +58,6 @@
             padding: 0;
         }
 
-        /* Карточку превращаем просто в вертикальный контейнер без рамок */
         .chat-card {
             width: 100%;
             max-width: 520px;
@@ -95,15 +76,6 @@
                 radial-gradient(circle at top left, rgba(79, 70, 229, 0.5), transparent 55%),
                 linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
             border-bottom: 1px solid rgba(30, 64, 175, 0.5);
-        }
-
-        .chat-header::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, rgba(148, 163, 184, 0.15), transparent 40%);
-            opacity: 0.35;
-            pointer-events: none;
         }
 
         .header-content {
@@ -140,55 +112,50 @@
 
         .logo-icon {
             position: relative;
+            width: 28px;
+            height: 28px;
+            transform: rotate(-15deg);
+        }
+
+        /* Основа треугольной линейки */
+        .triangle-ruler {
+            position: absolute;
             width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Треугольник */
-        .logo-triangle {
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 14px solid #f97316;
-            transform: rotate(0deg);
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        }
-
-        /* Линейка */
-        .logo-ruler {
-            position: absolute;
-            width: 20px;
-            height: 3px;
             background: 
-                repeating-linear-gradient(
-                    to right,
-                    #f9fafb 0px,
-                    #f9fafb 2px,
-                    transparent 2px,
-                    transparent 4px
-                );
-            transform: rotate(45deg);
-            top: 55%;
-            left: 45%;
-            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+                linear-gradient(90deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%),
+                linear-gradient(30deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%),
+                linear-gradient(150deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%);
+            border: 1px solid #f97316;
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
         }
 
-        /* Точка соединения */
-        .logo-dot {
+        /* Мелкие деления */
+        .ruler-marks {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #f9fafb;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 6px rgba(249, 250, 251, 0.8);
+            width: 100%;
+            height: 100%;
+            background: 
+                /* Горизонтальные деления */
+                repeating-linear-gradient(to bottom, 
+                    transparent 0, transparent 3px,
+                    #f9fafb 3px, #f9fafb 4px,
+                    transparent 4px, transparent 7px
+                ),
+                /* Диагональные деления слева */
+                repeating-linear-gradient(30deg, 
+                    transparent 0, transparent 3px,
+                    #f9fafb 3px, #f9fafb 4px,
+                    transparent 4px, transparent 7px
+                ),
+                /* Диагональные деления справа */
+                repeating-linear-gradient(150deg, 
+                    transparent 0, transparent 3px,
+                    #f9fafb 3px, #f9fafb 4px,
+                    transparent 4px, transparent 7px
+                );
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            opacity: 0.8;
         }
 
         .header-text {
@@ -334,7 +301,6 @@
             box-shadow:
                 0 12px 30px rgba(79, 70, 229, 0.55),
                 0 0 0 1px rgba(148, 163, 184, 0.25);
-            animation: microWiggle 210ms 60ms ease-out both;
         }
 
         .message-bubble.assistant {
@@ -345,10 +311,8 @@
             box-shadow:
                 0 14px 32px rgba(15, 23, 42, 0.95),
                 0 0 0 1px rgba(15, 23, 42, 0.8);
-            animation: microWiggle 230ms 80ms ease-out both;
         }
 
-        /* Подсветка ключевых слов */
         .highlight-keyword {
             color: #bfdbfe;
             font-weight: 600;
@@ -398,22 +362,12 @@
             border: 1.5px solid rgba(30, 64, 175, 0.9);
             transition: all 0.2s ease;
             padding: 4px 4px 4px 10px;
-            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
         }
 
         .input-wrapper:focus-within {
             border-color: var(--primary);
-            box-shadow:
-                0 0 0 1px rgba(129, 140, 248, 0.9),
-                0 16px 40px rgba(37, 99, 235, 0.35);
-        }
-
-        .input-wrapper.limit-reached {
-            border-color: var(--error);
-            background: rgba(127, 29, 29, 0.65);
-            box-shadow:
-                0 0 0 1px rgba(248, 113, 113, 0.7),
-                0 12px 28px rgba(127, 29, 29, 0.9);
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.9),
+                        0 16px 40px rgba(37, 99, 235, 0.35);
         }
 
         .text-input {
@@ -440,31 +394,6 @@
             cursor: not-allowed;
         }
 
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .limit-badge {
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
-            color: #fee2e2;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            animation: pulseSoft 2.2s ease-in-out infinite;
-            box-shadow: 0 10px 24px rgba(127, 29, 29, 0.8);
-        }
-
-        .limit-badge::before {
-            content: "⚠";
-            font-size: 10px;
-        }
-
         .send-button {
             width: 44px;
             height: 44px;
@@ -478,24 +407,15 @@
             align-items: center;
             justify-content: center;
             transition: all 0.15s ease;
-            box-shadow:
-                0 16px 32px rgba(22, 163, 74, 0.6),
-                0 0 0 1px rgba(21, 128, 61, 0.9);
+            box-shadow: 0 16px 32px rgba(22, 163, 74, 0.6),
+                        0 0 0 1px rgba(21, 128, 61, 0.9);
             flex-shrink: 0;
         }
 
         .send-button:hover:not(:disabled) {
             transform: translateY(-1px) scale(1.02);
-            box-shadow:
-                0 20px 38px rgba(22, 163, 74, 0.8),
-                0 0 0 1px rgba(187, 247, 208, 0.8);
-        }
-
-        .send-button:active:not(:disabled) {
-            transform: translateY(0) scale(0.97);
-            box-shadow:
-                0 10px 20px rgba(22, 163, 74, 0.8),
-                0 0 0 1px rgba(22, 163, 74, 0.9);
+            box-shadow: 0 20px 38px rgba(22, 163, 74, 0.8),
+                        0 0 0 1px rgba(187, 247, 208, 0.8);
         }
 
         .send-button:disabled {
@@ -528,35 +448,34 @@
 
         /* ===== Блок при исчерпанном лимите ===== */
         .limit-reached-container {
-            padding: 20px;
+            padding: 24px 20px;
             text-align: center;
-            background: linear-gradient(135deg, rgba(127, 29, 29, 0.1), rgba(185, 28, 28, 0.05));
-            border-radius: 16px;
-            margin: 10px 18px 18px;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            box-shadow: 0 8px 32px rgba(127, 29, 29, 0.4);
+            background: linear-gradient(135deg, rgba(127, 29, 29, 0.15), rgba(185, 28, 28, 0.1));
+            border-top: 1px solid rgba(239, 68, 68, 0.4);
+            backdrop-filter: blur(20px);
         }
 
         .limit-reached-icon {
-            font-size: 32px;
+            font-size: 40px;
             margin-bottom: 12px;
             animation: bounce 2s infinite;
         }
 
         .limit-reached-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
             color: #fecaca;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             background: linear-gradient(135deg, #fca5a5, #f87171);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .limit-reached-subtitle {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text-muted);
             line-height: 1.4;
+            opacity: 0.9;
         }
 
         .messages-container::-webkit-scrollbar {
@@ -574,21 +493,9 @@
             100% { transform: translate3d(-6px, 4px, 0) scale(1.03); }
         }
 
-        @keyframes gradientSpin {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-
         @keyframes bubbleIn {
             from { opacity: 0; transform: translateY(8px) scale(0.96); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes microWiggle {
-            0%   { transform: translateY(0) scale(1); }
-            30%  { transform: translateY(-1px) scale(1.01); }
-            60%  { transform: translateY(1px) scale(0.995); }
-            100% { transform: translateY(0) scale(1); }
         }
 
         @keyframes typingBounce {
@@ -599,11 +506,6 @@
         @keyframes progressFlow {
             0%   { background-position: 0% 50%; }
             100% { background-position: 200% 50%; }
-        }
-
-        @keyframes pulseSoft {
-            0%, 100% { transform: translateY(0); opacity: 1; }
-            50%      { transform: translateY(-1px); opacity: 0.8; }
         }
 
         @keyframes bounce {
@@ -627,9 +529,8 @@
                 <div class="header-content">
                     <div class="logo-container">
                         <div class="logo-icon">
-                            <span class="logo-triangle"></span>
-                            <span class="logo-ruler"></span>
-                            <span class="logo-dot"></span>
+                            <div class="triangle-ruler"></div>
+                            <div class="ruler-marks"></div>
                         </div>
                     </div>
                     <div class="header-text">
@@ -676,9 +577,6 @@
                         ></textarea>
                     </div>
                     <div class="input-actions">
-                        <div class="limit-badge" id="limit-badge" style="display: none;">
-                            Лимит исчерпан
-                        </div>
                         <button class="send-button" id="send-btn" type="submit">
                             <span class="send-icon">➤</span>
                         </button>
@@ -708,8 +606,6 @@
         const inputEl = document.getElementById("chat-input");
         const sendBtn = document.getElementById("send-btn");
         const errorEl = document.getElementById("error");
-        const inputWrapper = document.getElementById("input-wrapper");
-        const limitBadge = document.getElementById("limit-badge");
         const inputContainer = document.getElementById("input-container");
         const limitReachedContainer = document.getElementById("limit-reached-container");
 
@@ -726,34 +622,6 @@
         let isSending = false;
         let limitReached = false;
 
-        // ===== Подсветка ключевых слов в ответах ассистента =====
-        const highlightPatterns = [
-            { regex: /ГОСТ\s*Р?\s*\d[\d\-–: ]*/gi }, // ГОСТ с номером
-            { regex: /ГОСТ/gi },
-            { regex: /ЕСКД/gi },
-            { regex: /формат[а-я\s]*[АA]\d/gi }
-        ];
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>"']/g, c => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            }[c]));
-        }
-
-        function highlightText(raw) {
-            let safe = escapeHtml(raw);
-            for (const { regex } of highlightPatterns) {
-                safe = safe.replace(regex, match =>
-                    `<span class="highlight-keyword">${match}</span>`
-                );
-            }
-            return safe;
-        }
-
         function scrollToBottom() {
             messagesEl.scrollTop = messagesEl.scrollHeight;
         }
@@ -764,12 +632,7 @@
 
             const bubble = document.createElement("div");
             bubble.className = "message-bubble " + (role === "user" ? "user" : "assistant");
-
-            if (role === "assistant") {
-                bubble.innerHTML = highlightText(content);
-            } else {
-                bubble.textContent = content;
-            }
+            bubble.textContent = content;
 
             row.appendChild(bubble);
             messagesEl.appendChild(row);
@@ -815,11 +678,8 @@
             if (limitReached) {
                 limitWarningEl.style.display = "none";
                 limitPaywallEl.style.display = "block";
-                inputEl.placeholder = "";
                 inputEl.disabled = true;
                 sendBtn.disabled = true;
-                inputWrapper.classList.add('limit-reached');
-                limitBadge.style.display = 'flex';
                 
                 // Скрываем input и показываем блок с лимитом
                 inputContainer.style.display = 'none';
@@ -827,11 +687,8 @@
             } else {
                 limitWarningEl.style.display = "block";
                 limitPaywallEl.style.display = "none";
-                inputEl.placeholder = "Опиши задачу по чертежу или ГОСТам…";
                 inputEl.disabled = false;
                 sendBtn.disabled = false;
-                inputWrapper.classList.remove('limit-reached');
-                limitBadge.style.display = 'none';
                 
                 // Показываем input и скрываем блок с лимитом
                 inputContainer.style.display = 'block';
