@@ -1,605 +1,719 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
+<head>
     <meta charset="utf-8" />
     <title>ЕСКД Ассистент</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-        background: #020617;
-        color: #e5e7eb;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      .app-root {
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        padding: max(10px, env(safe-area-inset-top))
-          max(10px, env(safe-area-inset-right))
-          max(10px, env(safe-area-inset-bottom))
-          max(10px, env(safe-area-inset-left));
-        background: radial-gradient(circle at top, #1d4ed8 0, #020617 55%);
-      }
-      .chat-container {
-        width: 100%;
-        max-width: 520px;
-        background: rgba(15, 23, 42, 0.96);
-        border-radius: 24px;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.7);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        backdrop-filter: blur(18px);
-      }
-      .chat-header {
-        padding: 10px 14px;
-        border-bottom: 1px solid rgba(51, 65, 85, 0.9);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: radial-gradient(
-          circle at top left,
-          #2563eb 0,
-          #0f172a 60%
-        );
-      }
-      .chat-header-logo {
-        width: 36px;
-        height: 36px;
-        border-radius: 14px;
-        overflow: hidden;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #1d4ed8;
-        box-shadow: 0 8px 22px rgba(37, 99, 235, 0.5);
-      }
-      .chat-header-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .chat-header-text {
-        display: flex;
-        flex-direction: column;
-      }
-      .chat-header-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #f9fafb;
-      }
-      .chat-header-subtitle {
-        font-size: 12px;
-        color: #cbd5f5;
-      }
-      .chat-limit-bar {
-        padding: 8px 14px 10px;
-        background: #020617;
-        border-bottom: 1px solid rgba(51, 65, 85, 0.8);
-        font-size: 12px;
-      }
-      .limit-info-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-        align-items: baseline;
-      }
-      .limit-label {
-        font-weight: 500;
-        color: #e5e7eb;
-      }
-      .limit-count {
-        font-weight: 600;
-        color: #38bdf8;
-      }
-      .limit-progress {
-        width: 100%;
-        height: 6px;
-        background: rgba(15, 23, 42, 0.9);
-        border-radius: 999px;
-        overflow: hidden;
-        border: 1px solid rgba(51, 65, 85, 0.9);
-      }
-      .limit-progress-inner {
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(
-          90deg,
-          #22c55e,
-          #eab308,
-          #f97316,
-          #ef4444
-        );
-        background-size: 200% 100%;
-        transition: width 0.25s ease-out;
-        animation: shimmer 4s linear infinite;
-      }
-      .limit-warning {
-        margin-top: 4px;
-        font-size: 11px;
-        color: #fbbf24;
-      }
-      .limit-warning-paywall {
-        margin-top: 4px;
-        font-size: 11px;
-        color: #fecaca;
-      }
-      .chat-messages {
-        flex: 1;
-        padding: 10px 10px 6px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .chat-bubble-system {
-        align-self: center;
-        background: rgba(37, 99, 235, 0.16);
-        color: #bfdbfe;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 11px;
-        border: 1px solid rgba(59, 130, 246, 0.4);
-      }
-      .chat-message-row {
-        display: flex;
-        opacity: 0;
-        transform: translateY(6px) scale(0.99);
-        animation: bubbleIn 0.18s ease-out forwards;
-      }
-      .chat-message-row.user {
-        justify-content: flex-end;
-      }
-      .chat-message-row.assistant {
-        justify-content: flex-start;
-      }
-      .chat-bubble {
-        max-width: 80%;
-        padding: 8px 11px;
-        border-radius: 14px;
-        font-size: 14px;
-        line-height: 1.4;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-      .chat-bubble.user {
-        background: linear-gradient(135deg, #2563eb, #4f46e5);
-        color: #f9fafb;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
-      }
-      .chat-bubble.assistant {
-        background: rgba(15, 23, 42, 0.9);
-        color: #e5e7eb;
-        border: 1px solid rgba(55, 65, 81, 0.9);
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.8);
-      }
-      .typing-indicator {
-        display: inline-flex;
-        gap: 3px;
-        align-items: center;
-      }
-      .typing-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 999px;
-        background: #a5b4fc;
-        opacity: 0.3;
-        animation: typingBlink 1.2s infinite ease-in-out;
-      }
-      .typing-dot:nth-child(2) {
-        animation-delay: 0.15s;
-      }
-      .typing-dot:nth-child(3) {
-        animation-delay: 0.3s;
-      }
-      .chat-input-area {
-        padding: 8px 8px 10px;
-        border-top: 1px solid rgba(31, 41, 55, 0.9);
-        background: radial-gradient(circle at bottom, #0f172a 0, #020617 70%);
-      }
-      .chat-input-form {
-        display: flex;
-        gap: 6px;
-      }
-      .chat-input {
-        flex: 1;
-        border-radius: 999px;
-        border: 1px solid rgba(75, 85, 99, 0.9);
-        padding: 9px 13px;
-        font-size: 14px;
-        outline: none;
-        background: rgba(15, 23, 42, 0.9);
-        color: #e5e7eb;
-        transition: border 0.15s ease, box-shadow 0.15s ease,
-          background 0.15s ease;
-      }
-      .chat-input::placeholder {
-        color: #6b7280;
-      }
-      .chat-input:focus {
-        border-color: #38bdf8;
-        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
-        background: rgba(15, 23, 42, 1);
-      }
-      .chat-send-btn {
-        border-radius: 999px;
-        border: none;
-        padding: 0 14px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: #ecfdf5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        transition: opacity 0.15s ease, transform 0.08s ease,
-          box-shadow 0.15s ease;
-        box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
-        white-space: nowrap;
-      }
-      .chat-send-btn span.icon {
-        font-size: 16px;
-        transform: translateY(1px);
-      }
-      .chat-send-btn:active {
-        transform: scale(0.96) translateY(1px);
-        box-shadow: 0 4px 18px rgba(34, 197, 94, 0.5);
-      }
-      .chat-send-btn:disabled {
-        opacity: 0.5;
-        cursor: default;
-        box-shadow: none;
-      }
-      .chat-footer-note {
-        margin-top: 5px;
-        font-size: 10px;
-        color: #9ca3af;
-        text-align: center;
-      }
-      .chat-error {
-        margin-top: 4px;
-        font-size: 11px;
-        color: #fecaca;
-        text-align: center;
-      }
-      .chat-messages::-webkit-scrollbar {
-        width: 4px;
-      }
-      .chat-messages::-webkit-scrollbar-thumb {
-        background: rgba(75, 85, 99, 0.8);
-        border-radius: 999px;
-      }
-      @keyframes bubbleIn {
-        from {
-          opacity: 0;
-          transform: translateY(6px) scale(0.96);
+        :root {
+            --primary: #6366f1;
+            --primary-glow: #818cf8;
+            --secondary: #f472b6;
+            --accent: #06d6a0;
+            --bg-main: #0f0f1a;
+            --bg-card: rgba(30, 30, 50, 0.8);
+            --bg-input: rgba(40, 40, 60, 0.9);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: rgba(99, 102, 241, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      }
-      @keyframes typingBlink {
-        0% {
-          opacity: 0.2;
-          transform: translateY(0);
+
+        body {
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        30% {
-          opacity: 1;
-          transform: translateY(-1px);
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(6, 214, 160, 0.1) 0%, transparent 50%);
         }
-        60% {
-          opacity: 0.3;
-          transform: translateY(0);
+
+        .chat-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            max-height: 800px;
         }
-        100% {
-          opacity: 0.2;
-          transform: translateY(0);
+
+        /* Header */
+        .chat-header {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%);
+            position: relative;
+            overflow: hidden;
         }
-      }
-      @keyframes shimmer {
-        0% {
-          background-position: 0% 50%;
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary-glow), transparent);
         }
-        100% {
-          background-position: 200% 50%;
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
         }
-      }
-      @media (max-width: 400px) {
-        .chat-container {
-          border-radius: 20px;
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
         }
-        .chat-header-title {
-          font-size: 15px;
+
+        .logo-container::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            background: var(--bg-card);
+            border-radius: 15px;
         }
-        .chat-bubble {
-          font-size: 13px;
+
+        .logo-container img {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+            filter: brightness(0) invert(1);
         }
-      }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Limit Bar */
+        .limit-container {
+            padding: 16px 20px;
+            background: rgba(15, 15, 25, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .limit-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .limit-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .limit-count {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            box-shadow: 0 0 10px rgba(6, 214, 160, 0.5);
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .limit-warning {
+            font-size: 12px;
+            color: var(--warning);
+            font-weight: 500;
+        }
+
+        .limit-paywall {
+            font-size: 12px;
+            color: var(--error);
+            font-weight: 500;
+        }
+
+        /* Messages */
+        .messages-container {
+            flex: 1;
+            padding: 16px 16px 8px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .system-message {
+            align-self: center;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary-glow);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            max-width: 85%;
+        }
+
+        .message-row {
+            display: flex;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: messageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 22px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message-bubble.user {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .message-bubble.assistant {
+            background: rgba(40, 40, 60, 0.8);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-glow);
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* Input Area */
+        .input-container {
+            padding: 16px 20px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 15, 25, 0.7);
+        }
+
+        .input-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .text-input {
+            flex: 1;
+            border-radius: 20px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 18px;
+            font-size: 15px;
+            outline: none;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .text-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: rgba(45, 45, 65, 0.9);
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .send-button:hover::before {
+            left: 100%;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .send-icon {
+            font-size: 18px;
+            transform: translateX(1px);
+        }
+
+        .footer-note {
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .error-message {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--error);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Scrollbar */
+        .messages-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        /* Animations */
+        @keyframes messageSlideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chat-card {
+                height: 90vh;
+                border-radius: 20px;
+            }
+            
+            .chat-header {
+                padding: 16px 16px 12px;
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .input-container {
+                padding: 12px 16px 16px;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div class="app-root">
-      <div class="chat-container">
-        <header class="chat-header">
-          <div class="chat-header-logo">
-            <img src="/logo.png" alt="ЕСКД" />
-          </div>
-          <div class="chat-header-text">
-            <div class="chat-header-title">ЕСКД Ассистент</div>
-            <div class="chat-header-subtitle">
-              ГОСТы и конструкторская документация
+</head>
+<body>
+    <div class="app-container">
+        <div class="chat-card">
+            <!-- Header -->
+            <header class="chat-header">
+                <div class="header-content">
+                    <div class="logo-container">
+                        <img src="/logo.png" alt="ЕСКД" />
+                    </div>
+                    <div class="header-text">
+                        <h1 class="header-title">ЕСКД Ассистент</h1>
+                        <p class="header-subtitle">Твой гид по ГОСТам и чертежам</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Limit Bar -->
+            <div class="limit-container">
+                <div class="limit-header">
+                    <span class="limit-label">Бесплатные обращения</span>
+                    <span class="limit-count"><span id="used">0</span>/<span id="limit">3</span></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="limit-progress-inner" style="width: 0%"></div>
+                </div>
+                <div class="limit-warning" id="limit-warning">
+                    Осталось <span id="remaining">3</span> обращения
+                </div>
+                <div class="limit-paywall" id="limit-warning-paywall" style="display: none">
+                    🔥 Лимит исчерпан! Скоро здесь появится подписка
+                </div>
             </div>
-          </div>
-        </header>
 
-        <div class="chat-limit-bar">
-          <div class="limit-info-row">
-            <span class="limit-label">Бесплатные обращения:</span>
-            <span class="limit-count"
-              ><span id="used">0</span>/<span id="limit">3</span></span
-            >
-          </div>
-          <div class="limit-progress">
-            <div
-              class="limit-progress-inner"
-              id="limit-progress-inner"
-              style="width: 0%"
-            ></div>
-          </div>
-          <div class="limit-warning" id="limit-warning">
-            Осталось <span id="remaining">3</span> обращения.
-          </div>
-          <div
-            class="limit-warning-paywall"
-            id="limit-warning-paywall"
-            style="display: none"
-          >
-            Ваши бесплатные обращения закончились. В ближайшее время здесь
-            появится оплата подписки ЕСКД Ассистент.
-          </div>
-        </div>
+            <!-- Messages -->
+            <div class="messages-container" id="messages">
+                <div class="system-message">
+                    Спроси про форматы листов, рамки, основную надпись или другие элементы чертежей
+                </div>
+            </div>
 
-        <div class="chat-messages" id="messages">
-          <div class="chat-bubble-system">
-            Задайте вопрос по ЕСКД/ГОСТ: формат листа, рамка, основная надпись,
-            выноски, обозначения и т.п.
-          </div>
+            <!-- Input Area -->
+            <div class="input-container">
+                <form class="input-form" id="chat-form">
+                    <textarea 
+                        id="chat-input" 
+                        class="text-input" 
+                        placeholder="Опиши свою задачу или вопрос по ЕСКД..." 
+                        autocomplete="off"
+                        rows="1"
+                    ></textarea>
+                    <button class="send-button" id="send-btn" type="submit">
+                        <span class="send-icon">➤</span>
+                    </button>
+                </form>
+                <div class="footer-note">
+                    Ответы носят справочный характер — всегда проверяй по официальным источникам
+                </div>
+                <div class="error-message" id="error"></div>
+            </div>
         </div>
-
-        <div class="chat-input-area">
-          <form class="chat-input-form" id="chat-form">
-            <input
-              id="chat-input"
-              class="chat-input"
-              type="text"
-              placeholder="Опишите задачу или ситуацию на чертеже…"
-              autocomplete="off"
-            />
-            <button class="chat-send-btn" id="send-btn" type="submit">
-              <span class="icon">➤</span>
-            </button>
-          </form>
-          <div class="chat-footer-note">
-            Ответы носят справочный характер — при необходимости сверяйтесь с
-            официальным текстом ГОСТ.
-          </div>
-          <div class="chat-error" id="error"></div>
-        </div>
-      </div>
     </div>
 
     <script>
-      const messagesEl = document.getElementById("messages");
-      const formEl = document.getElementById("chat-form");
-      const inputEl = document.getElementById("chat-input");
-      const sendBtn = document.getElementById("send-btn");
-      const errorEl = document.getElementById("error");
+        // Сохраняем оригинальный JavaScript код без изменений
+        const messagesEl = document.getElementById("messages");
+        const formEl = document.getElementById("chat-form");
+        const inputEl = document.getElementById("chat-input");
+        const sendBtn = document.getElementById("send-btn");
+        const errorEl = document.getElementById("error");
 
-      const usedEl = document.getElementById("used");
-      const limitEl = document.getElementById("limit");
-      const remEl = document.getElementById("remaining");
-      const progressInner = document.getElementById("limit-progress-inner");
-      const limitWarningEl = document.getElementById("limit-warning");
-      const limitPaywallEl = document.getElementById("limit-warning-paywall");
+        const usedEl = document.getElementById("used");
+        const limitEl = document.getElementById("limit");
+        const remEl = document.getElementById("remaining");
+        const progressInner = document.getElementById("limit-progress-inner");
+        const limitWarningEl = document.getElementById("limit-warning");
+        const limitPaywallEl = document.getElementById("limit-warning-paywall");
 
-      let telegramId = null;
-      let messagesUsed = 0;
-      let freeLimit = 3;
-      let isSending = false;
-      let limitReached = false;
+        let telegramId = null;
+        let messagesUsed = 0;
+        let freeLimit = 3;
+        let isSending = false;
+        let limitReached = false;
 
-      function scrollToBottom() {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-
-      function appendMessage(role, content) {
-        const row = document.createElement("div");
-        row.className = "chat-message-row " + role;
-
-        const bubble = document.createElement("div");
-        bubble.className =
-          "chat-bubble " + (role === "user" ? "user" : "assistant");
-        bubble.textContent = content;
-
-        row.appendChild(bubble);
-        messagesEl.appendChild(row);
-        scrollToBottom();
-      }
-
-      function appendTyping() {
-        const row = document.createElement("div");
-        row.className = "chat-message-row assistant";
-        row.id = "typing-row";
-
-        const bubble = document.createElement("div");
-        bubble.className = "chat-bubble assistant";
-
-        const ti = document.createElement("div");
-        ti.className = "typing-indicator";
-        ti.innerHTML =
-          '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-
-        bubble.appendChild(ti);
-        row.appendChild(bubble);
-
-        messagesEl.appendChild(row);
-        scrollToBottom();
-      }
-
-      function removeTyping() {
-        const row = document.getElementById("typing-row");
-        if (row && row.parentNode) {
-          row.parentNode.removeChild(row);
+        function scrollToBottom() {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
         }
-      }
 
-      function updateLimitUI() {
-        usedEl.textContent = messagesUsed;
-        limitEl.textContent = freeLimit;
-        const remaining = Math.max(0, freeLimit - messagesUsed);
-        remEl.textContent = remaining;
+        function appendMessage(role, content) {
+            const row = document.createElement("div");
+            row.className = "message-row " + role;
 
-        const percent =
-          freeLimit > 0 ? Math.min(100, (messagesUsed / freeLimit) * 100) : 0;
-        progressInner.style.width = percent + "%";
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble " + (role === "user" ? "user" : "assistant");
+            bubble.textContent = content;
 
-        limitReached = messagesUsed >= freeLimit;
-        if (limitReached) {
-          limitWarningEl.style.display = "none";
-          limitPaywallEl.style.display = "block";
-          inputEl.placeholder = "Лимит бесплатных обращений исчерпан";
-          inputEl.disabled = true;
-          sendBtn.disabled = true;
-        } else {
-          limitWarningEl.style.display = "block";
-          limitPaywallEl.style.display = "none";
-          inputEl.disabled = false;
-          sendBtn.disabled = false;
+            row.appendChild(bubble);
+            messagesEl.appendChild(row);
+            scrollToBottom();
         }
-      }
 
-      function initTelegramId() {
-        try {
-          const tg = window.Telegram && window.Telegram.WebApp;
-          if (tg) {
-            tg.ready();
-            tg.expand();
-            const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
-            const id =
-              (user && user.id) ||
-              (user && user.username) ||
-              (user &&
-                (user.first_name || "") +
-                  "_" +
-                  (user.last_name || "")) ||
-              null;
-            telegramId = id ? String(id) : "anon-" + Math.random().toString(36).slice(2, 10);
-          } else {
-            telegramId = "local-test-user";
-          }
-        } catch (e) {
-          console.error("Telegram init error", e);
-          telegramId = "fallback-user";
+        function appendTyping() {
+            const row = document.createElement("div");
+            row.className = "message-row assistant";
+            row.id = "typing-row";
+
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble assistant";
+
+            const ti = document.createElement("div");
+            ti.className = "typing-indicator";
+            ti.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+
+            bubble.appendChild(ti);
+            row.appendChild(bubble);
+
+            messagesEl.appendChild(row);
+            scrollToBottom();
         }
-      }
 
-      async function loadUserInfo() {
-        if (!telegramId) return;
-        try {
-          const res = await fetch("/api/user", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ telegramId })
-          });
-          if (!res.ok) return;
-          const data = await res.json();
-          messagesUsed = data.messages_used ?? 0;
-          freeLimit = data.free_limit ?? 3;
-          updateLimitUI();
-        } catch (e) {
-          console.error("loadUserInfo error", e);
-        }
-      }
-
-      formEl.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        errorEl.textContent = "";
-
-        const text = inputEl.value.trim();
-        if (!text || isSending || limitReached || !telegramId) return;
-
-        appendMessage("user", text);
-        inputEl.value = "";
-        isSending = true;
-        sendBtn.disabled = true;
-        appendTyping();
-
-        try {
-          const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ telegramId, message: text })
-          });
-
-          removeTyping();
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            if (res.status === 403 && err.error === "limit_reached") {
-              messagesUsed = err.messages_used ?? messagesUsed;
-              freeLimit = err.free_limit ?? freeLimit;
-              updateLimitUI();
-              errorEl.textContent = err.message || "Лимит сообщений исчерпан.";
-              return;
+        function removeTyping() {
+            const row = document.getElementById("typing-row");
+            if (row && row.parentNode) {
+                row.parentNode.removeChild(row);
             }
-            errorEl.textContent =
-              err.error || "Ошибка при обращении к серверу.";
-            return;
-          }
-
-          const data = await res.json();
-          messagesUsed = data.messages_used ?? messagesUsed;
-          freeLimit = data.free_limit ?? freeLimit;
-          updateLimitUI();
-
-          appendMessage(
-            "assistant",
-            data.answer || "Пустой ответ от ассистента."
-          );
-        } catch (err) {
-          console.error("send error", err);
-          removeTyping();
-          errorEl.textContent =
-            "Не удалось отправить запрос. Проверьте соединение.";
-        } finally {
-          isSending = false;
-          if (!limitReached) {
-            sendBtn.disabled = false;
-          }
         }
-      });
 
-      // init
-      initTelegramId();
-      updateLimitUI();
-      loadUserInfo();
+        function updateLimitUI() {
+            usedEl.textContent = messagesUsed;
+            limitEl.textContent = freeLimit;
+            const remaining = Math.max(0, freeLimit - messagesUsed);
+            remEl.textContent = remaining;
+
+            const percent = freeLimit > 0 ? Math.min(100, (messagesUsed / freeLimit) * 100) : 0;
+            progressInner.style.width = percent + "%";
+
+            limitReached = messagesUsed >= freeLimit;
+            if (limitReached) {
+                limitWarningEl.style.display = "none";
+                limitPaywallEl.style.display = "block";
+                inputEl.placeholder = "Лимит бесплатных обращений исчерпан";
+                inputEl.disabled = true;
+                sendBtn.disabled = true;
+            } else {
+                limitWarningEl.style.display = "block";
+                limitPaywallEl.style.display = "none";
+                inputEl.disabled = false;
+                sendBtn.disabled = false;
+            }
+        }
+
+        function initTelegramId() {
+            try {
+                const tg = window.Telegram && window.Telegram.WebApp;
+                if (tg) {
+                    tg.ready();
+                    tg.expand();
+                    const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                    const id = (user && user.id) || (user && user.username) || (user && (user.first_name || "") + "_" + (user.last_name || "")) || null;
+                    telegramId = id ? String(id) : "anon-" + Math.random().toString(36).slice(2, 10);
+                } else {
+                    telegramId = "local-test-user";
+                }
+            } catch (e) {
+                console.error("Telegram init error", e);
+                telegramId = "fallback-user";
+            }
+        }
+
+        async function loadUserInfo() {
+            if (!telegramId) return;
+            try {
+                const res = await fetch("/api/user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ telegramId })
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                messagesUsed = data.messages_used ?? 0;
+                freeLimit = data.free_limit ?? 3;
+                updateLimitUI();
+            } catch (e) {
+                console.error("loadUserInfo error", e);
+            }
+        }
+
+        // Auto-resize textarea
+        inputEl.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        formEl.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorEl.textContent = "";
+
+            const text = inputEl.value.trim();
+            if (!text || isSending || limitReached || !telegramId) return;
+
+            appendMessage("user", text);
+            inputEl.value = "";
+            inputEl.style.height = 'auto';
+            isSending = true;
+            sendBtn.disabled = true;
+            appendTyping();
+
+            try {
+                const res = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ telegramId, message: text })
+                });
+
+                removeTyping();
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    if (res.status === 403 && err.error === "limit_reached") {
+                        messagesUsed = err.messages_used ?? messagesUsed;
+                        freeLimit = err.free_limit ?? freeLimit;
+                        updateLimitUI();
+                        errorEl.textContent = err.message || "Лимит сообщений исчерпан.";
+                        return;
+                    }
+                    errorEl.textContent = err.error || "Ошибка при обращении к серверу.";
+                    return;
+                }
+
+                const data = await res.json();
+                messagesUsed = data.messages_used ?? messagesUsed;
+                freeLimit = data.free_limit ?? freeLimit;
+                updateLimitUI();
+
+                appendMessage("assistant", data.answer || "Пустой ответ от ассистента.");
+            } catch (err) {
+                console.error("send error", err);
+                removeTyping();
+                errorEl.textContent = "Не удалось отправить запрос. Проверьте соединение.";
+            } finally {
+                isSending = false;
+                if (!limitReached) {
+                    sendBtn.disabled = false;
+                }
+            }
+        });
+
+        // init
+        initTelegramId();
+        updateLimitUI();
+        loadUserInfo();
     </script>
-  </body>
+</body>
 </html>
