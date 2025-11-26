@@ -27,8 +27,11 @@ module.exports = async (req, res) => {
     // 1. Получаем или создаём пользователя
     const user = await getOrCreateUser(tgId);
 
-    // 2. Проверяем лимит
-    if (user.messages_used >= FREE_LIMIT) {
+    // 2. Определяем, dev ли это (браузер, а не Telegram)
+    const isDev = tgId.startsWith('local-'); // все браузерные id мы делаем local-...
+
+    // 3. Проверяем лимит ТОЛЬКО для обычных юзеров (не dev)
+    if (!isDev && user.messages_used >= FREE_LIMIT) {
       return res.status(403).json({
         error: 'limit_reached',
         message:
@@ -38,9 +41,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // -----------------------------------------
-    // 3. МОЩНЫЙ SYSTEM PROMPT (вставлен полностью)
-    // -----------------------------------------
+    // 4. System prompt
     const systemPrompt = `
 Вы — эксперт по ЕСКД и стандартам ГОСТ, специализирующийся на оформлении конструкторской документации.
 
@@ -89,9 +90,9 @@ module.exports = async (req, res) => {
 - ГОСТ 2.301-68 — https://docs.cntd.ru/search?search=ГОСТ+2.301-68  
 - ГОСТ 2.104-2006 — https://allgosts.ru/search?search=2.104-2006  
 - ГОСТ 2.304-81 — https://gostedu.ru/search?query=2.304-81  
-`.trim();
+    `.trim();
 
-    // 4. Готовим запрос к OpenAI
+    // 5. Запрос к OpenAI
     const payload = {
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
@@ -127,15 +128,16 @@ module.exports = async (req, res) => {
       data.choices?.[0]?.message?.content ||
       'Ошибка: пустой ответ от модели';
 
-    // 5. Добавляем мягкое предупреждение
     const suffix =
       '\n\n(Перед использованием обязательно проверьте формулировки в официальном тексте ГОСТ.)';
     const finalAnswer = answer.trim() + suffix;
 
-    // 6. Увеличиваем счётчик обращений
-    const updatedUser = await incrementMessagesUsed(user.id);
+    // 6. Увеличиваем счётчик ТОЛЬКО для обычных юзеров, не dev
+    let updatedUser = user;
+    if (!isDev) {
+      updatedUser = await incrementMessagesUsed(user.id);
+    }
 
-    // 7. Отдаём ответ
     return res.status(200).json({
       answer: finalAnswer,
       messages_used: updatedUser.messages_used,
