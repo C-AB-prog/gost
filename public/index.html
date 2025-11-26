@@ -86,76 +86,23 @@
             z-index: 1;
         }
 
-        /* ===== Треугольная линейка ===== */
+        /* ===== Лого из файла logo.png ===== */
         .logo-container {
             width: 44px;
             height: 44px;
             border-radius: 12px;
-            background: linear-gradient(135deg, #6366f1, #ec4899);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow:
-                0 10px 25px rgba(79, 70, 229, 0.7),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
-            position: relative;
             overflow: hidden;
+            box-shadow:
+                0 10px 25px rgba(15, 23, 42, 0.9),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+            flex-shrink: 0;
         }
 
-        .logo-container::before {
-            content: "";
-            position: absolute;
-            inset: 1px;
-            border-radius: 11px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8));
-        }
-
-        .logo-icon {
-            position: relative;
-            width: 28px;
-            height: 28px;
-            transform: rotate(-15deg);
-        }
-
-        /* Основа треугольной линейки */
-        .triangle-ruler {
-            position: absolute;
+        .logo-img {
             width: 100%;
             height: 100%;
-            background: 
-                linear-gradient(90deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%),
-                linear-gradient(30deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%),
-                linear-gradient(150deg, transparent 49%, #f97316 49%, #f97316 51%, transparent 51%);
-            border: 1px solid #f97316;
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-        }
-
-        /* Мелкие деления */
-        .ruler-marks {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: 
-                /* Горизонтальные деления */
-                repeating-linear-gradient(to bottom, 
-                    transparent 0, transparent 3px,
-                    #f9fafb 3px, #f9fafb 4px,
-                    transparent 4px, transparent 7px
-                ),
-                /* Диагональные деления слева */
-                repeating-linear-gradient(30deg, 
-                    transparent 0, transparent 3px,
-                    #f9fafb 3px, #f9fafb 4px,
-                    transparent 4px, transparent 7px
-                ),
-                /* Диагональные деления справа */
-                repeating-linear-gradient(150deg, 
-                    transparent 0, transparent 3px,
-                    #f9fafb 3px, #f9fafb 4px,
-                    transparent 4px, transparent 7px
-                );
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-            opacity: 0.8;
+            display: block;
+            object-fit: cover;
         }
 
         .header-text {
@@ -528,10 +475,8 @@
             <header class="chat-header">
                 <div class="header-content">
                     <div class="logo-container">
-                        <div class="logo-icon">
-                            <div class="triangle-ruler"></div>
-                            <div class="ruler-marks"></div>
-                        </div>
+                        <!-- вот здесь используется твой файл public/logo.png -->
+                        <img src="/logo.png" alt="ЕСКД Ассистент" class="logo-img" />
                     </div>
                     <div class="header-text">
                         <h1 class="header-title">ЕСКД Ассистент</h1>
@@ -588,7 +533,7 @@
                 <div class="error-message" id="error"></div>
             </div>
 
-            <!-- Блок при исчерпанном лимите (показывается вместо input) -->
+            <!-- Блок при исчерпанном лимите -->
             <div class="limit-reached-container" id="limit-reached-container" style="display: none">
                 <div class="limit-reached-icon">🚫</div>
                 <div class="limit-reached-title">Лимит исчерпан</div>
@@ -680,8 +625,6 @@
                 limitPaywallEl.style.display = "block";
                 inputEl.disabled = true;
                 sendBtn.disabled = true;
-                
-                // Скрываем input и показываем блок с лимитом
                 inputContainer.style.display = 'none';
                 limitReachedContainer.style.display = 'block';
             } else {
@@ -689,8 +632,6 @@
                 limitPaywallEl.style.display = "none";
                 inputEl.disabled = false;
                 sendBtn.disabled = false;
-                
-                // Показываем input и скрываем блок с лимитом
                 inputContainer.style.display = 'block';
                 limitReachedContainer.style.display = 'none';
             }
