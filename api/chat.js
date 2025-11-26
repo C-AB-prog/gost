@@ -27,11 +27,8 @@ module.exports = async (req, res) => {
     // 1. Получаем или создаём пользователя
     const user = await getOrCreateUser(tgId);
 
-    // 2. Определяем, dev ли это (браузер, а не Telegram)
-    const isDev = tgId.startsWith('local-'); // все браузерные id мы делаем local-...
-
-    // 3. Проверяем лимит ТОЛЬКО для обычных юзеров (не dev)
-    if (!isDev && user.messages_used >= FREE_LIMIT) {
+    // 2. Проверка лимита (для всех, и Telegram, и браузерных local-xxx)
+    if (user.messages_used >= FREE_LIMIT) {
       return res.status(403).json({
         error: 'limit_reached',
         message:
@@ -41,7 +38,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 4. System prompt
+    // 3. System prompt про ЕСКД/ГОСТ
     const systemPrompt = `
 Вы — эксперт по ЕСКД и стандартам ГОСТ, специализирующийся на оформлении конструкторской документации.
 
@@ -92,7 +89,7 @@ module.exports = async (req, res) => {
 - ГОСТ 2.304-81 — https://gostedu.ru/search?query=2.304-81  
     `.trim();
 
-    // 5. Запрос к OpenAI
+    // 4. Запрос к OpenAI
     const payload = {
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
@@ -132,11 +129,8 @@ module.exports = async (req, res) => {
       '\n\n(Перед использованием обязательно проверьте формулировки в официальном тексте ГОСТ.)';
     const finalAnswer = answer.trim() + suffix;
 
-    // 6. Увеличиваем счётчик ТОЛЬКО для обычных юзеров, не dev
-    let updatedUser = user;
-    if (!isDev) {
-      updatedUser = await incrementMessagesUsed(user.id);
-    }
+    // 5. Увеличиваем счётчик для этого пользователя
+    const updatedUser = await incrementMessagesUsed(user.id);
 
     return res.status(200).json({
       answer: finalAnswer,
