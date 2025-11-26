@@ -621,7 +621,7 @@
                     Осталось <span id="remaining">3</span> обращения
                 </div>
                 <div class="limit-text limit-paywall" id="limit-warning-paywall" style="display: none">
-                    ⚠️ Лимит исчерпан! Скоро здесь появится подписка
+                    Лимит исчерпан
                 </div>
             </div>
 
@@ -741,8 +741,11 @@
 
             limitReached = messagesUsed >= freeLimit;
             if (limitReached) {
+                // Показываем только "Лимит исчерпан" без лишнего текста
                 limitWarningEl.style.display = "none";
-                limitPaywallEl.style.display = "flex";
+                limitPaywallEl.style.display = "block";
+                limitPaywallEl.textContent = "Лимит исчерпан";
+                
                 inputEl.placeholder = "";
                 inputEl.disabled = true;
                 sendBtn.disabled = true;
