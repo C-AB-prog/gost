@@ -271,7 +271,7 @@
             display: flex;
             align-items: flex-end;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
         }
 
@@ -387,12 +387,26 @@
             font-size: 11px;
         }
 
+        /* Modern Footer Note */
         .footer-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             font-size: 11px;
             color: var(--text-muted);
-            text-align: center;
             line-height: 1.4;
             padding: 0 8px;
+        }
+
+        .footer-icon {
+            font-size: 12px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .footer-text {
+            text-align: center;
         }
 
         .error-message {
@@ -510,7 +524,7 @@
             }
             
             .text-input {
-                font-size: 16px; /* Better for mobile */
+                font-size: 16px;
                 padding: 10px 14px;
             }
             
@@ -526,6 +540,11 @@
             
             .footer-note {
                 font-size: 10px;
+                gap: 4px;
+            }
+            
+            .footer-icon {
+                font-size: 11px;
             }
         }
 
@@ -555,6 +574,10 @@
             .limit-badge {
                 font-size: 10px;
                 padding: 5px 10px;
+            }
+            
+            .footer-note {
+                font-size: 9px;
             }
         }
 
@@ -630,8 +653,10 @@
                         </button>
                     </div>
                 </form>
+                <!-- Modern Footer Note -->
                 <div class="footer-note">
-                    Ответы носят справочный характер — всегда проверяй по официальным источникам
+                    <span class="footer-icon">ℹ️</span>
+                    <span class="footer-text">Для точности сверяйся с официальными источниками</span>
                 </div>
                 <div class="error-message" id="error"></div>
             </div>
@@ -639,7 +664,6 @@
     </div>
 
     <script>
-        // JavaScript код остается без изменений
         const messagesEl = document.getElementById("messages");
         const formEl = document.getElementById("chat-form");
         const inputEl = document.getElementById("chat-input");
