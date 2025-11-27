@@ -27,8 +27,15 @@ module.exports = async (req, res) => {
     // 1. Получаем или создаём пользователя
     const user = await getOrCreateUser(tgId);
 
-    // 2. Проверяем лимит
-    if (user.messages_used >= FREE_LIMIT) {
+    // 2. Проверяем, есть ли активный премиум
+    const now = new Date();
+    const hasPremium =
+      user.is_premium &&
+      user.premium_until &&
+      new Date(user.premium_until) > now;
+
+    // 3. Если премиума нет — проверяем лимит
+    if (!hasPremium && user.messages_used >= FREE_LIMIT) {
       return res.status(403).json({
         error: 'limit_reached',
         message:
@@ -38,7 +45,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 3. System prompt с аккуратным стилем без Markdown
+    // 4. System prompt с аккуратным стилем без Markdown
     const systemPrompt = `
 Вы — эксперт по ЕСКД и стандартам ГОСТ, специализирующийся на оформлении конструкторской документации и смежных областях.
 
@@ -80,7 +87,7 @@ docs.cntd.ru, gostedu.ru, allgosts.ru, standartgost.ru.
 - Если вопрос слишком общий (например, просто «майонез»), аккуратно попросите уточнение, но всё равно дайте полезную базу: что обычно регулируется ГОСТами в этой теме и какие стандарты смотрят.
     `.trim();
 
-    // 4. Запрос к OpenAI
+    // 5. Запрос к OpenAI
     const payload = {
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
@@ -116,18 +123,23 @@ docs.cntd.ru, gostedu.ru, allgosts.ru, standartgost.ru.
       data.choices?.[0]?.message?.content ||
       'Ошибка: пустой ответ от модели';
 
-    // 5. Добавляем короткое напоминание
+    // 6. Добавляем короткое напоминание
     const suffix =
       '\n\nНапоминание: при серьёзном использовании обязательно перепроверьте формулировки в официальном тексте ГОСТ.';
     const finalAnswer = answer.trim() + suffix;
 
-    // 6. Увеличиваем счётчик
-    const updatedUser = await incrementMessagesUsed(user.id);
+    // 7. Увеличиваем счётчик только если пользователь НЕ премиум
+    let updatedUser = user;
+    if (!hasPremium) {
+      updatedUser = await incrementMessagesUsed(user.id);
+    }
 
     return res.status(200).json({
       answer: finalAnswer,
       messages_used: updatedUser.messages_used,
-      free_limit: FREE_LIMIT
+      free_limit: FREE_LIMIT,
+      is_premium: hasPremium,
+      premium_until: user.premium_until
     });
   } catch (err) {
     console.error('Server error', err);
