@@ -15,30 +15,33 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const { telegramId } = req.body || {};
+  if (!telegramId) {
+    return res.status(400).json({ error: 'telegramId is required' });
+  }
+
+  const tgId = String(telegramId);
+
+  // если ЮKassa ещё не настроена (нет ключей) — сразу мягкое сообщение
   if (!SHOP_ID || !SECRET_KEY) {
-    console.error('YOOKASSA env is not set');
-    return res.status(500).json({ error: 'YooKassa is not configured' });
+    console.warn('YOOKASSA env is not set, returning mock message');
+    return res.status(200).json({
+      message:
+        'Оплата пока недоступна: магазин ЮKassa ещё не настроен или на модерации.'
+    });
   }
 
   try {
-    const { telegramId } = req.body || {};
-    if (!telegramId) {
-      return res.status(400).json({ error: 'telegramId is required' });
-    }
-
-    const tgId = String(telegramId);
-
     // убеждаемся, что юзер есть в БД
     await getOrCreateUser(tgId);
 
-    // формируем тело платежа
     const idempotenceKey = crypto.randomUUID();
     const payload = {
       amount: {
         value: SUB_PRICE,
         currency: 'RUB'
       },
-      capture: true, // сразу списать
+      capture: true,
       description: 'ЕСКД Ассистент — подписка на 1 месяц',
       confirmation: {
         type: 'redirect',
@@ -63,33 +66,38 @@ module.exports = async (req, res) => {
       body: JSON.stringify(payload)
     });
 
+    // если ЮKassa вернула ошибку (часто так, пока магазин не одобрен)
     if (!response.ok) {
       const text = await response.text().catch(() => null);
       console.error('YooKassa create payment error', response.status, text);
-      return res
-        .status(502)
-        .json({ error: 'yookassa_error', details: text || null });
+      return res.status(200).json({
+        message:
+          'Оплата пока недоступна: магазин ЮKassa ещё не активирован или на модерации.'
+      });
     }
 
     const data = await response.json();
-
     const confirmationUrl =
       data.confirmation && data.confirmation.confirmation_url;
 
     if (!confirmationUrl) {
       console.error('No confirmation_url in YooKassa response', data);
-      return res
-        .status(502)
-        .json({ error: 'no_confirmation_url_from_yookassa' });
+      return res.status(200).json({
+        message:
+          'Не удалось получить ссылку на оплату от ЮKassa. Попробуйте позже.'
+      });
     }
 
-    // отдаем фронту ссылку на оплату
+    // всё ок — отдаём ссылку фронту
     return res.status(200).json({
       confirmation_url: confirmationUrl,
       payment_id: data.id
     });
   } catch (err) {
     console.error('pay-yookassa server error', err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(200).json({
+      message:
+        'Что-то пошло не так при создании платежа. Попробуйте позже.'
+    });
   }
 };
