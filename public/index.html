@@ -425,6 +425,33 @@
             opacity: 0.9;
         }
 
+        /* Кнопка покупки подписки */
+        .buy-sub-btn {
+            margin-top: 16px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: #f9fafb;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.7);
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .buy-sub-btn:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 16px 36px rgba(79, 70, 229, 0.9);
+        }
+
+        .buy-sub-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
         .messages-container::-webkit-scrollbar {
             width: 4px;
         }
@@ -475,7 +502,6 @@
             <header class="chat-header">
                 <div class="header-content">
                     <div class="logo-container">
-                        <!-- вот здесь используется твой файл public/logo.png -->
                         <img src="/logo.png" alt="ЕСКД Ассистент" class="logo-img" />
                     </div>
                     <div class="header-text">
@@ -539,8 +565,11 @@
                 <div class="limit-reached-title">Лимит исчерпан</div>
                 <div class="limit-reached-subtitle">
                     Бесплатные обращения закончились<br>
-                    Следите за обновлениями для получения доступа
+                    Можешь оформить подписку, чтобы пользоваться ассистентом без ограничений.
                 </div>
+                <button class="buy-sub-btn" id="buy-sub-btn">
+                    ⭐ Купить подписку на 1 месяц
+                </button>
             </div>
         </div>
     </div>
@@ -560,6 +589,8 @@
         const progressInner = document.getElementById("limit-progress-inner");
         const limitWarningEl = document.getElementById("limit-warning");
         const limitPaywallEl = document.getElementById("limit-warning-paywall");
+
+        const buyBtn = document.getElementById("buy-sub-btn");
 
         let telegramId = null;
         let messagesUsed = 0;
@@ -745,6 +776,52 @@
                 }
             }
         });
+
+        // Клик по кнопке "Купить подписку"
+        if (buyBtn) {
+            buyBtn.addEventListener('click', async () => {
+                errorEl.textContent = "";
+                if (!telegramId) {
+                    errorEl.textContent = "Ошибка: не удалось определить Telegram ID.";
+                    return;
+                }
+
+                try {
+                    const res = await fetch("/api/pay-yookassa", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ telegramId })
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        errorEl.textContent = data.error || "Не удалось создать платёж.";
+                        return;
+                    }
+
+                    // если бэкенд вернул текст без ссылки (например, магазин на модерации)
+                    if (data.message && !data.confirmation_url) {
+                        errorEl.textContent = data.message;
+                        return;
+                    }
+
+                    if (data.confirmation_url) {
+                        const tg = window.Telegram && window.Telegram.WebApp;
+                        if (tg && tg.openLink) {
+                            tg.openLink(data.confirmation_url);
+                        } else {
+                            window.open(data.confirmation_url, "_blank");
+                        }
+                    } else {
+                        errorEl.textContent = "Не удалось получить ссылку на оплату.";
+                    }
+                } catch (e) {
+                    console.error("pay error", e);
+                    errorEl.textContent = "Ошибка при обращении к платёжному серверу.";
+                }
+            });
+        }
 
         initTelegramId();
         updateLimitUI();
