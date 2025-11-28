@@ -1,5 +1,5 @@
 // api/user.js
-const { getOrCreateUser } = require('../db');
+const { getOrCreateUser, clearExpiredPremium } = require('../db');
 
 const FREE_LIMIT = 3;
 
@@ -16,19 +16,27 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'telegramId is required' });
     }
 
-    const user = await getOrCreateUser(String(telegramId));
+    let user = await getOrCreateUser(String(telegramId));
 
+    // проверяем, не истёк ли премиум
+    let isPremium = false;
+    let premiumUntil = user.premium_until ? new Date(user.premium_until) : null;
     const now = new Date();
-    const hasPremium =
-      user.is_premium &&
-      user.premium_until &&
-      new Date(user.premium_until) > now;
+
+    if (user.is_premium && premiumUntil && premiumUntil > now) {
+      isPremium = true;
+    } else if (user.is_premium && premiumUntil && premiumUntil <= now) {
+      // истёк — сбросим флаг в БД
+      user = await clearExpiredPremium(user.id);
+      isPremium = false;
+      premiumUntil = null;
+    }
 
     return res.status(200).json({
-      messages_used: user.messages_used ?? 0,
+      messages_used: user.messages_used,
       free_limit: FREE_LIMIT,
-      is_premium: hasPremium,
-      premium_until: user.premium_until
+      is_premium: isPremium,
+      premium_until: premiumUntil ? premiumUntil.toISOString() : null
     });
   } catch (err) {
     console.error('user api error', err);
