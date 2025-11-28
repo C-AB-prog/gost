@@ -86,7 +86,6 @@
             z-index: 1;
         }
 
-        /* ===== Лого из файла logo.png ===== */
         .logo-container {
             width: 44px;
             height: 44px;
@@ -425,7 +424,6 @@
             opacity: 0.9;
         }
 
-        /* Кнопка покупки подписки */
         .buy-sub-btn {
             margin-top: 16px;
             padding: 10px 18px;
@@ -450,6 +448,12 @@
 
         .buy-sub-btn:active {
             transform: translateY(0) scale(0.97);
+        }
+
+        .premium-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: #bbf7d0;
         }
 
         .messages-container::-webkit-scrollbar {
@@ -506,7 +510,10 @@
                     </div>
                     <div class="header-text">
                         <h1 class="header-title">ЕСКД Ассистент</h1>
-                        <p class="header-subtitle">Твой гид по ГОСТам и чертежам</p>
+                        <p class="header-subtitle">
+                            Твой гид по ГОСТам и чертежам
+                            <span id="premium-badge" class="premium-badge" style="display:none;">· Премиум</span>
+                        </p>
                     </div>
                 </div>
             </header>
@@ -535,7 +542,7 @@
                 </div>
             </div>
 
-            <!-- Input Area (скрывается при исчерпанном лимите) -->
+            <!-- Input Area -->
             <div class="input-container" id="input-container">
                 <form class="input-form" id="chat-form">
                     <div class="input-wrapper" id="input-wrapper">
@@ -564,11 +571,11 @@
                 <div class="limit-reached-icon">🚫</div>
                 <div class="limit-reached-title">Лимит исчерпан</div>
                 <div class="limit-reached-subtitle">
-                    Бесплатные обращения закончились<br>
-                    Можешь оформить подписку, чтобы пользоваться ассистентом без ограничений.
+                    Бесплатные обращения закончились.<br>
+                    Оформи подписку за 129 ⭐, чтобы пользоваться ассистентом без ограничений в течение месяца.
                 </div>
                 <button class="buy-sub-btn" id="buy-sub-btn">
-                    ⭐ Купить подписку на 1 месяц
+                    ⭐ Купить подписку за 129 звёзд
                 </button>
             </div>
         </div>
@@ -589,6 +596,7 @@
         const progressInner = document.getElementById("limit-progress-inner");
         const limitWarningEl = document.getElementById("limit-warning");
         const limitPaywallEl = document.getElementById("limit-warning-paywall");
+        const premiumBadgeEl = document.getElementById("premium-badge");
 
         const buyBtn = document.getElementById("buy-sub-btn");
 
@@ -597,6 +605,7 @@
         let freeLimit = 3;
         let isSending = false;
         let limitReached = false;
+        let isPremium = false;
 
         function scrollToBottom() {
             messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -642,6 +651,28 @@
         }
 
         function updateLimitUI() {
+            if (isPremium) {
+                // Премиум — лимитов нет
+                if (premiumBadgeEl) premiumBadgeEl.style.display = "inline";
+                usedEl.textContent = "∞";
+                limitEl.textContent = "∞";
+                remEl.textContent = "∞";
+                progressInner.style.width = "0%";
+
+                limitWarningEl.textContent = "У вас активна подписка — лимитов нет";
+                limitWarningEl.style.display = "block";
+                limitPaywallEl.style.display = "none";
+
+                inputEl.disabled = false;
+                sendBtn.disabled = false;
+                inputContainer.style.display = "block";
+                limitReachedContainer.style.display = "none";
+                limitReached = false;
+                return;
+            }
+
+            if (premiumBadgeEl) premiumBadgeEl.style.display = "none";
+
             usedEl.textContent = messagesUsed;
             limitEl.textContent = freeLimit;
             const remaining = Math.max(0, freeLimit - messagesUsed);
@@ -712,6 +743,7 @@
                 const data = await res.json();
                 messagesUsed = data.messages_used ?? 0;
                 freeLimit = data.free_limit ?? 3;
+                isPremium = data.is_premium ?? false;
                 updateLimitUI();
             } catch (e) {
                 console.error("loadUserInfo error", e);
@@ -728,7 +760,7 @@
             errorEl.textContent = "";
 
             const text = inputEl.value.trim();
-            if (!text || isSending || limitReached || !telegramId) return;
+            if (!text || isSending || (limitReached && !isPremium) || !telegramId) return;
 
             appendMessage("user", text);
             inputEl.value = "";
@@ -748,7 +780,7 @@
 
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
-                    if (res.status === 403 && err.error === "limit_reached") {
+                    if (res.status === 403 && err.error === "limit_reached" && !isPremium) {
                         messagesUsed = err.messages_used ?? messagesUsed;
                         freeLimit = err.free_limit ?? freeLimit;
                         updateLimitUI();
@@ -762,6 +794,10 @@
                 const data = await res.json();
                 messagesUsed = data.messages_used ?? messagesUsed;
                 freeLimit = data.free_limit ?? freeLimit;
+                // если на бэке уже премиум, можно тоже подхватить
+                if (typeof data.is_premium === "boolean") {
+                    isPremium = data.is_premium;
+                }
                 updateLimitUI();
 
                 appendMessage("assistant", data.answer || "Пустой ответ от ассистента.");
@@ -771,13 +807,13 @@
                 errorEl.textContent = "Не удалось отправить запрос. Проверьте соединение.";
             } finally {
                 isSending = false;
-                if (!limitReached) {
+                if (!limitReached || isPremium) {
                     sendBtn.disabled = false;
                 }
             }
         });
 
-        // Клик по кнопке "Купить подписку"
+        // Клик по кнопке "Купить подписку" — Telegram Stars
         if (buyBtn) {
             buyBtn.addEventListener('click', async () => {
                 errorEl.textContent = "";
@@ -787,7 +823,7 @@
                 }
 
                 try {
-                    const res = await fetch("/api/pay-yookassa", {
+                    const res = await fetch("/api/pay-stars", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ telegramId })
@@ -800,21 +836,49 @@
                         return;
                     }
 
-                    // если бэкенд вернул текст без ссылки (например, магазин на модерации)
-                    if (data.message && !data.confirmation_url) {
+                    if (data.message && !data.invoice_link) {
                         errorEl.textContent = data.message;
                         return;
                     }
 
-                    if (data.confirmation_url) {
-                        const tg = window.Telegram && window.Telegram.WebApp;
-                        if (tg && tg.openLink) {
-                            tg.openLink(data.confirmation_url);
-                        } else {
-                            window.open(data.confirmation_url, "_blank");
-                        }
-                    } else {
+                    if (!data.invoice_link) {
                         errorEl.textContent = "Не удалось получить ссылку на оплату.";
+                        return;
+                    }
+
+                    const tg = window.Telegram && window.Telegram.WebApp;
+
+                    if (tg && tg.openInvoice) {
+                        tg.openInvoice(data.invoice_link, async (status) => {
+                            if (status === "paid") {
+                                try {
+                                    const r = await fetch("/api/activate-premium", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ telegramId })
+                                    });
+                                    const d = await r.json().catch(() => ({}));
+                                    if (r.ok && d.ok) {
+                                        isPremium = true;
+                                        await loadUserInfo();
+                                        errorEl.textContent = "Подписка активирована. Спасибо!";
+                                    } else {
+                                        errorEl.textContent =
+                                            d.error || "Оплата прошла, но не удалось включить подписку. Напишите в поддержку.";
+                                    }
+                                } catch (e) {
+                                    console.error("activate premium error", e);
+                                    errorEl.textContent =
+                                        "Оплата прошла, но не удалось включить подписку. Попробуйте обновить мини-приложение.";
+                                }
+                            } else if (status === "cancelled") {
+                                errorEl.textContent = "Оплата отменена.";
+                            } else if (status === "failed") {
+                                errorEl.textContent = "Оплата не прошла. Попробуйте ещё раз.";
+                            }
+                        });
+                    } else {
+                        window.open(data.invoice_link, "_blank");
                     }
                 } catch (e) {
                     console.error("pay error", e);
