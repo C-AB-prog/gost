@@ -1,9 +1,11 @@
 // api/pay-stars.js
-const { getOrCreateUser } = require('../db');
+const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const API_URL = BOT_TOKEN
+  ? `https://api.telegram.org/bot${BOT_TOKEN}`
+  : null;
 
-// цена подписки в звёздах (пример: 300 звёзд)
+// Сколько звёзд за месяц
 const STARS_PRICE = 129;
 
 module.exports = async (req, res) => {
@@ -11,76 +13,51 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { telegramId } = req.body || {};
-  if (!telegramId) {
-    return res.status(400).json({ error: 'telegramId is required' });
-  }
-
-  const tgId = String(telegramId);
-
-  // если бот-токен не задан — мягкое сообщение
-  if (!BOT_TOKEN) {
-    console.warn('BOT_TOKEN is not set, returning mock message');
-    return res.status(200).json({
-      message:
-        'Оплата пока недоступна: бот оплаты ещё не настроен (нет BOT_TOKEN).'
-    });
+  if (!API_URL) {
+    return res.status(500).json({ error: 'BOT_TOKEN is not set' });
   }
 
   try {
-    // просто убеждаемся, что юзер есть в БД
-    await getOrCreateUser(tgId);
-
-    // Параметры инвойса для Stars
-    // Bot API: createInvoiceLink, currency: XTR, prices: [{amount, label}] 
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`;
-
-    const payloadObj = {
-      type: 'eskd_month_subscription',
-      telegramId: tgId
-    };
-
-    const body = {
-      title: 'ЕСКД Ассистент — 1 месяц',
-      description: 'Подписка на 1 месяц без лимита обращений к ассистенту.',
-      payload: JSON.stringify(payloadObj),
-      provider_token: '', // для Stars — пустая строка
-      currency: 'XTR',
-      prices: [
-        {
-          label: 'Подписка на 1 месяц',
-          amount: STARS_PRICE // количество звёзд
-        }
-      ],
-      // можно добавить max_tip_amount, suggested_tip_amounts и т.п. при желании
-    };
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok || !data || !data.ok) {
-      console.error('Telegram createInvoiceLink error', response.status, data);
-      return res.status(200).json({
-        message:
-          'Оплата пока недоступна: не удалось создать ссылку на оплату в звёздах.'
-      });
+    const { telegramId } = req.body || {};
+    if (!telegramId) {
+      return res.status(400).json({ error: 'telegramId is required' });
     }
 
-    const invoiceLink = data.result; // это строка-URL на оплату
+    const title = 'ЕСКД Ассистент — 1 месяц';
+    const description =
+      'Безлимитные вопросы по ЕСКД и ГОСТам в течение 1 месяца.';
+    const payload = JSON.stringify({
+      type: 'eskd_month',
+      telegramId: String(telegramId)
+    });
 
-    return res.status(200).json({
-      invoice_link: invoiceLink
+    const resp = await fetch(`${API_URL}/createInvoiceLink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        payload,
+        provider_token: '', // для Stars пустая строка
+        currency: 'XTR',
+        prices: [
+          {
+            label: 'Подписка на 1 месяц',
+            amount: STARS_PRICE // 129 звёзд
+          }
+        ]
+      })
     });
+
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) {
+      console.error('createInvoiceLink error', data);
+      return res.status(502).json({ error: 'telegram_error', details: data });
+    }
+
+    return res.status(200).json({ invoice_url: data.result });
   } catch (err) {
-    console.error('pay-stars server error', err);
-    return res.status(200).json({
-      message:
-        'Что-то пошло не так при создании платежа. Попробуйте позже.'
-    });
+    console.error('pay-stars api error', err);
+    return res.status(500).json({ error: 'Server error' });
   }
 };
