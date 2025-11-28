@@ -1,3 +1,4 @@
+// db/index.js
 const { neon } = require('@neondatabase/serverless');
 
 if (!process.env.DATABASE_URL) {
@@ -6,14 +7,15 @@ if (!process.env.DATABASE_URL) {
 
 const sql = neon(process.env.DATABASE_URL);
 
-// получить или создать пользователя
+/**
+ * Находит пользователя по telegram_id или создаёт нового.
+ */
 async function getOrCreateUser(telegramId) {
   const rows = await sql`
     SELECT *
     FROM users
     WHERE telegram_id = ${telegramId}
   `;
-
   if (rows.length > 0) return rows[0];
 
   const inserted = await sql`
@@ -24,7 +26,9 @@ async function getOrCreateUser(telegramId) {
   return inserted[0];
 }
 
-// увеличить счетчик сообщений
+/**
+ * Увеличивает счётчик использованных сообщений.
+ */
 async function incrementMessagesUsed(userId) {
   const rows = await sql`
     UPDATE users
@@ -35,13 +39,31 @@ async function incrementMessagesUsed(userId) {
   return rows[0];
 }
 
-// включить премиум до даты
-async function activatePremium(userId, untilDate, paymentId = null) {
+/**
+ * Включает/обновляет премиум.
+ */
+async function setPremium(userId, untilIso, paymentId = null) {
   const rows = await sql`
     UPDATE users
-    SET is_premium = true,
-        premium_until = ${untilDate},
-        last_payment_id = ${paymentId}
+    SET
+      is_premium = true,
+      premium_until = ${untilIso},
+      last_payment_id = ${paymentId}
+    WHERE id = ${userId}
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+/**
+ * Сбрасывает премиум (когда закончился).
+ */
+async function clearExpiredPremium(userId) {
+  const rows = await sql`
+    UPDATE users
+    SET
+      is_premium = false,
+      premium_until = NULL
     WHERE id = ${userId}
     RETURNING *
   `;
@@ -52,5 +74,6 @@ module.exports = {
   sql,
   getOrCreateUser,
   incrementMessagesUsed,
-  activatePremium
+  setPremium,
+  clearExpiredPremium
 };
