@@ -1,5 +1,8 @@
 // api/activate-premium.js
-const { sql, getOrCreateUser } = require('../db');
+const { getOrCreateUser, setPremium } = require('../db');
+
+// 30 дней премиума
+const PREMIUM_DAYS = 30;
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -12,26 +15,23 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'telegramId is required' });
     }
 
-    const tgId = String(telegramId);
+    const user = await getOrCreateUser(String(telegramId));
 
-    // убедимся, что юзер есть
-    const user = await getOrCreateUser(tgId);
+    const now = new Date();
+    let baseDate = now;
 
-    // включаем премиум на 30 дней вперёд
-    const rows = await sql`
-      UPDATE users
-      SET 
-        is_premium = TRUE,
-        premium_until = GREATEST(
-          COALESCE(premium_until, NOW()),
-          NOW()
-        ) + INTERVAL '30 days',
-        last_payment_id = COALESCE(last_payment_id, 'stars')
-      WHERE id = ${user.id}
-      RETURNING id, is_premium, premium_until;
-    `;
+    // если уже есть премиум в будущем — продлеваем от той даты
+    if (user.premium_until) {
+      const currentUntil = new Date(user.premium_until);
+      if (currentUntil > now) {
+        baseDate = currentUntil;
+      }
+    }
 
-    const updated = rows[0];
+    baseDate.setDate(baseDate.getDate() + PREMIUM_DAYS);
+    const untilIso = baseDate.toISOString();
+
+    const updated = await setPremium(user.id, untilIso, null);
 
     return res.status(200).json({
       ok: true,
