@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>ЕСКД Ассистент</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -20,11 +21,7 @@
             --warning: #facc15;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
@@ -35,7 +32,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Анимированный фон по всей переписке ===== */
         body::before {
             content: "";
             position: fixed;
@@ -68,7 +64,6 @@
             position: relative;
         }
 
-        /* ===== Header ===== */
         .chat-header {
             position: relative;
             padding: 18px 20px 14px;
@@ -126,9 +121,8 @@
             opacity: 0.9;
         }
 
-        /* ===== Лимиты ===== */
         .limit-container {
-            padding: 12px 20px 14px;
+            padding: 10px 20px 12px;
             background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.92));
             border-bottom: 1px solid rgba(30, 64, 175, 0.5);
         }
@@ -176,18 +170,41 @@
 
         .limit-text {
             font-size: 11px;
-            text-align: center;
+            text-align: left;
         }
 
-        .limit-warning {
-            color: var(--warning);
+        .limit-warning { color: var(--warning); }
+        .limit-paywall { color: #fecaca; }
+
+        .premium-badge {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #bbf7d0;
         }
 
-        .limit-paywall {
-            color: #fecaca;
+        .buy-button-small {
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            background: radial-gradient(circle at 0 0, #f97316 0, transparent 45%),
+                        linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, 0.6);
         }
 
-        /* ===== Сообщения ===== */
+        .buy-button-small:disabled {
+            opacity: .6;
+            cursor: default;
+            box-shadow: none;
+        }
+
         .messages-container {
             flex: 1;
             padding: 16px 16px 8px;
@@ -224,9 +241,7 @@
             z-index: 1;
         }
 
-        .message-row.user {
-            justify-content: flex-end;
-        }
+        .message-row.user { justify-content: flex-end; }
 
         .message-bubble {
             max-width: 80%;
@@ -244,9 +259,8 @@
                         linear-gradient(135deg, #6366f1, #ec4899);
             color: #f9fafb;
             border-bottom-right-radius: 6px;
-            box-shadow:
-                0 12px 30px rgba(79, 70, 229, 0.55),
-                0 0 0 1px rgba(148, 163, 184, 0.25);
+            box-shadow: 0 12px 30px rgba(79, 70, 229, 0.55),
+                        0 0 0 1px rgba(148, 163, 184, 0.25);
         }
 
         .message-bubble.assistant {
@@ -254,15 +268,8 @@
             color: var(--text-primary);
             border: 1px solid rgba(55, 65, 81, 0.9);
             border-bottom-left-radius: 6px;
-            box-shadow:
-                0 14px 32px rgba(15, 23, 42, 0.95),
-                0 0 0 1px rgba(15, 23, 42, 0.8);
-        }
-
-        .highlight-keyword {
-            color: #bfdbfe;
-            font-weight: 600;
-            text-shadow: 0 0 8px rgba(129, 140, 248, 0.9);
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.95),
+                        0 0 0 1px rgba(15, 23, 42, 0.8);
         }
 
         .typing-indicator {
@@ -284,7 +291,6 @@
         .typing-dot:nth-child(1) { animation-delay: -0.28s; }
         .typing-dot:nth-child(2) { animation-delay: -0.14s; }
 
-        /* ===== Input ===== */
         .input-container {
             padding: 14px 18px 18px;
             border-top: 1px solid rgba(30, 64, 175, 0.7);
@@ -331,14 +337,8 @@
             line-height: 1.45;
         }
 
-        .text-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .text-input:disabled {
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
+        .text-input::placeholder { color: var(--text-muted); }
+        .text-input:disabled { color: var(--text-muted); cursor: not-allowed; }
 
         .send-button {
             width: 44px;
@@ -358,12 +358,6 @@
             flex-shrink: 0;
         }
 
-        .send-button:hover:not(:disabled) {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 20px 38px rgba(22, 163, 74, 0.8),
-                        0 0 0 1px rgba(187, 247, 208, 0.8);
-        }
-
         .send-button:disabled {
             opacity: 0.55;
             cursor: not-allowed;
@@ -372,10 +366,7 @@
                         linear-gradient(135deg, #4b5563, #374151);
         }
 
-        .send-icon {
-            font-size: 16px;
-            transform: translateX(1px);
-        }
+        .send-icon { font-size: 16px; transform: translateX(1px); }
 
         .footer-note {
             font-size: 10px;
@@ -392,9 +383,8 @@
             min-height: 16px;
         }
 
-        /* ===== Блок при исчерпанном лимите ===== */
         .limit-reached-container {
-            padding: 24px 20px;
+            padding: 24px 20px 28px;
             text-align: center;
             background: linear-gradient(135deg, rgba(127, 29, 29, 0.15), rgba(185, 28, 28, 0.1));
             border-top: 1px solid rgba(239, 68, 68, 0.4);
@@ -422,49 +412,37 @@
             color: var(--text-muted);
             line-height: 1.4;
             opacity: 0.9;
+            margin-bottom: 16px;
         }
 
-        .buy-sub-btn {
-            margin-top: 16px;
-            padding: 10px 18px;
-            border-radius: 999px;
-            border: none;
-            background: linear-gradient(135deg, #6366f1, #ec4899);
-            color: #f9fafb;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.7);
-            transition: all 0.15s ease;
+        .buy-button-big {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-        }
-
-        .buy-sub-btn:hover {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 16px 36px rgba(79, 70, 229, 0.9);
-        }
-
-        .buy-sub-btn:active {
-            transform: translateY(0) scale(0.97);
-        }
-
-        .premium-badge {
-            font-size: 11px;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 999px;
+            border: none;
+            font-size: 14px;
             font-weight: 600;
-            color: #bbf7d0;
+            cursor: pointer;
+            background: radial-gradient(circle at 0 0, #f97316 0, transparent 45%),
+                        linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 18px 36px rgba(22, 163, 74, 0.7);
         }
 
-        .messages-container::-webkit-scrollbar {
-            width: 4px;
+        .buy-button-big:disabled {
+            opacity: .6;
+            cursor: default;
+            box-shadow: none;
         }
+
+        .messages-container::-webkit-scrollbar { width: 4px; }
         .messages-container::-webkit-scrollbar-thumb {
             background: rgba(148, 163, 184, 0.7);
             border-radius: 999px;
         }
 
-        /* ===== Анимации ===== */
         @keyframes bgFloat {
             0%   { transform: translate3d(-18px, 8px, 0) scale(1.02); }
             50%  { transform: translate3d(12px, -10px, 0) scale(1.04); }
@@ -493,403 +471,436 @@
         }
 
         @media (max-width: 480px) {
-            .chat-card {
-                max-width: 100%;
-            }
+            .chat-card { max-width: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="chat-card">
-            <!-- Header -->
-            <header class="chat-header">
-                <div class="header-content">
-                    <div class="logo-container">
-                        <img src="/logo.png" alt="ЕСКД Ассистент" class="logo-img" />
-                    </div>
-                    <div class="header-text">
-                        <h1 class="header-title">ЕСКД Ассистент</h1>
-                        <p class="header-subtitle">
-                            Твой гид по ГОСТам и чертежам
-                            <span id="premium-badge" class="premium-badge" style="display:none;">· Премиум</span>
-                        </p>
-                    </div>
+<div class="app-container">
+    <div class="chat-card">
+        <header class="chat-header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="/logo.png" alt="ЕСКД Ассистент" class="logo-img" />
                 </div>
-            </header>
-
-            <!-- Limit Bar -->
-            <div class="limit-container">
-                <div class="limit-header">
-                    <span class="limit-label">Бесплатные обращения</span>
-                    <span class="limit-count"><span id="used">0</span>/<span id="limit">3</span></span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="limit-progress-inner" style="width: 0%"></div>
-                </div>
-                <div class="limit-text limit-warning" id="limit-warning">
-                    Осталось <span id="remaining">3</span> обращения
-                </div>
-                <div class="limit-text limit-paywall" id="limit-warning-paywall" style="display: none">
-                    Лимит исчерпан
+                <div class="header-text">
+                    <h1 class="header-title">ЕСКД Ассистент</h1>
+                    <p class="header-subtitle" id="header-subtitle">
+                        Твой гид по ГОСТам и чертежам
+                    </p>
                 </div>
             </div>
+        </header>
 
-            <!-- Messages -->
-            <div class="messages-container" id="messages">
-                <div class="system-message">
-                    Спроси про форматы листов, рамки, основную надпись или другие элементы чертежей — ассистент подскажет ГОСТы.
-                </div>
+        <div class="limit-container">
+            <div class="limit-header">
+                <span class="limit-label" id="limit-label">Бесплатные обращения</span>
+                <span class="limit-count"><span id="used">0</span>/<span id="limit">3</span></span>
             </div>
-
-            <!-- Input Area -->
-            <div class="input-container" id="input-container">
-                <form class="input-form" id="chat-form">
-                    <div class="input-wrapper" id="input-wrapper">
-                        <textarea 
-                            id="chat-input" 
-                            class="text-input" 
-                            placeholder="Опиши задачу по чертежу или ГОСТам…" 
-                            autocomplete="off"
-                            rows="1"
-                        ></textarea>
-                    </div>
-                    <div class="input-actions">
-                        <button class="send-button" id="send-btn" type="submit">
-                            <span class="send-icon">➤</span>
-                        </button>
-                    </div>
-                </form>
-                <div class="footer-note">
-                    Ответы носят справочный характер — перед оформлением документации сверяйтесь с официальными текстами ГОСТ.
-                </div>
-                <div class="error-message" id="error"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="limit-progress-inner" style="width: 0%"></div>
             </div>
+            <div class="limit-text limit-warning" id="limit-warning">
+                Осталось <span id="remaining">3</span> обращения
+            </div>
+            <div class="limit-text limit-paywall" id="limit-warning-paywall" style="display:none">
+                Лимит исчерпан — оформите премиум, чтобы пользоваться без ограничений.
+            </div>
+            <div class="premium-badge" id="premium-badge" style="display:none"></div>
+            <button class="buy-button-small" id="buy-small" type="button" style="display:none">
+                ⭐ Премиум на месяц — 129 звёзд
+            </button>
+        </div>
 
-            <!-- Блок при исчерпанном лимите -->
-            <div class="limit-reached-container" id="limit-reached-container" style="display: none">
-                <div class="limit-reached-icon">🚫</div>
-                <div class="limit-reached-title">Лимит исчерпан</div>
-                <div class="limit-reached-subtitle">
-                    Бесплатные обращения закончились.<br>
-                    Оформи подписку за 129 ⭐, чтобы пользоваться ассистентом без ограничений в течение месяца.
-                </div>
-                <button class="buy-sub-btn" id="buy-sub-btn">
-                    ⭐ Купить подписку за 129 звёзд
-                </button>
+        <div class="messages-container" id="messages">
+            <div class="system-message">
+                Спроси про форматы листов, рамки, основную надпись или другие элементы чертежей — ассистент подскажет ГОСТы.
             </div>
         </div>
+
+        <div class="input-container" id="input-container">
+            <form class="input-form" id="chat-form">
+                <div class="input-wrapper" id="input-wrapper">
+                    <textarea
+                        id="chat-input"
+                        class="text-input"
+                        placeholder="Опиши задачу по чертежу или ГОСТам…"
+                        autocomplete="off"
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button class="send-button" id="send-btn" type="submit">
+                    <span class="send-icon">➤</span>
+                </button>
+            </form>
+            <div class="footer-note">
+                Ответы носят справочный характер — перед оформлением документации сверяйтесь с официальными текстами ГОСТ.
+            </div>
+            <div class="error-message" id="error"></div>
+        </div>
+
+        <div class="limit-reached-container" id="limit-reached-container" style="display:none">
+            <div class="limit-reached-icon">🚫</div>
+            <div class="limit-reached-title">Лимит исчерпан</div>
+            <div class="limit-reached-subtitle">
+                Бесплатные обращения закончились.<br/>
+                Оформите премиум и задавайте вопросы без ограничений.
+            </div>
+            <button class="buy-button-big" id="buy-big" type="button">
+                ⭐ Премиум на месяц — 129 звёзд
+            </button>
+        </div>
     </div>
+</div>
 
-    <script>
-        const messagesEl = document.getElementById("messages");
-        const formEl = document.getElementById("chat-form");
-        const inputEl = document.getElementById("chat-input");
-        const sendBtn = document.getElementById("send-btn");
-        const errorEl = document.getElementById("error");
-        const inputContainer = document.getElementById("input-container");
-        const limitReachedContainer = document.getElementById("limit-reached-container");
+<script>
+    const messagesEl = document.getElementById("messages");
+    const formEl = document.getElementById("chat-form");
+    const inputEl = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const errorEl = document.getElementById("error");
+    const inputContainer = document.getElementById("input-container");
+    const limitReachedContainer = document.getElementById("limit-reached-container");
+    const buySmallBtn = document.getElementById("buy-small");
+    const buyBigBtn = document.getElementById("buy-big");
+    const premiumBadgeEl = document.getElementById("premium-badge");
+    const headerSubtitleEl = document.getElementById("header-subtitle");
+    const limitLabelEl = document.getElementById("limit-label");
 
-        const usedEl = document.getElementById("used");
-        const limitEl = document.getElementById("limit");
-        const remEl = document.getElementById("remaining");
-        const progressInner = document.getElementById("limit-progress-inner");
-        const limitWarningEl = document.getElementById("limit-warning");
-        const limitPaywallEl = document.getElementById("limit-warning-paywall");
-        const premiumBadgeEl = document.getElementById("premium-badge");
+    const usedEl = document.getElementById("used");
+    const limitEl = document.getElementById("limit");
+    const remEl = document.getElementById("remaining");
+    const progressInner = document.getElementById("limit-progress-inner");
+    const limitWarningEl = document.getElementById("limit-warning");
+    const limitPaywallEl = document.getElementById("limit-warning-paywall");
 
-        const buyBtn = document.getElementById("buy-sub-btn");
+    let telegramId = null;
+    let messagesUsed = 0;
+    let freeLimit = 3;
+    let isPremium = false;
+    let premiumUntil = null;
+    let isSending = false;
+    let limitReached = false;
+    let isBuying = false;
 
-        let telegramId = null;
-        let messagesUsed = 0;
-        let freeLimit = 3;
-        let isSending = false;
-        let limitReached = false;
-        let isPremium = false;
+    function scrollToBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
 
-        function scrollToBottom() {
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+    function appendMessage(role, content) {
+        const row = document.createElement("div");
+        row.className = "message-row " + role;
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble " + (role === "user" ? "user" : "assistant");
+        bubble.textContent = content;
+
+        row.appendChild(bubble);
+        messagesEl.appendChild(row);
+        scrollToBottom();
+    }
+
+    function appendTyping() {
+        const row = document.createElement("div");
+        row.className = "message-row assistant";
+        row.id = "typing-row";
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble assistant";
+
+        const ti = document.createElement("div");
+        ti.className = "typing-indicator";
+        ti.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+
+        bubble.appendChild(ti);
+        row.appendChild(bubble);
+
+        messagesEl.appendChild(row);
+        scrollToBottom();
+    }
+
+    function removeTyping() {
+        const row = document.getElementById("typing-row");
+        if (row && row.parentNode) {
+            row.parentNode.removeChild(row);
+        }
+    }
+
+    function updatePremiumUI() {
+        if (isPremium && premiumUntil) {
+            const date = new Date(premiumUntil);
+            const dd = String(date.getDate()).padStart(2, "0");
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const yy = String(date.getFullYear()).slice(-2);
+
+            headerSubtitleEl.textContent = `Премиум до ${dd}.${mm}.${yy}`;
+            limitLabelEl.textContent = "Премиум доступ";
+            premiumBadgeEl.style.display = "block";
+            premiumBadgeEl.textContent = `Премиум активен до ${dd}.${mm}.${yy}`;
+            limitWarningEl.style.display = "none";
+            limitPaywallEl.style.display = "none";
+            buySmallBtn.style.display = "none";
+            limitReachedContainer.style.display = "none";
+            inputContainer.style.display = "block";
+
+            usedEl.textContent = "∞";
+            limitEl.textContent = "∞";
+            remEl.textContent = "∞";
+            progressInner.style.width = "0%";
+        } else {
+            headerSubtitleEl.textContent = "Твой гид по ГОСТам и чертежам";
+            limitLabelEl.textContent = "Бесплатные обращения";
+            premiumBadgeEl.style.display = "none";
+            usedEl.textContent = messagesUsed;
+            limitEl.textContent = freeLimit;
+        }
+    }
+
+    function updateLimitUI() {
+        if (isPremium) {
+            updatePremiumUI();
+            return;
         }
 
-        function appendMessage(role, content) {
-            const row = document.createElement("div");
-            row.className = "message-row " + role;
+        usedEl.textContent = messagesUsed;
+        limitEl.textContent = freeLimit;
+        const remaining = Math.max(0, freeLimit - messagesUsed);
+        remEl.textContent = remaining;
 
-            const bubble = document.createElement("div");
-            bubble.className = "message-bubble " + (role === "user" ? "user" : "assistant");
-            bubble.textContent = content;
+        const percent = freeLimit > 0 ? Math.min(100, (messagesUsed / freeLimit) * 100) : 0;
+        progressInner.style.width = percent + "%";
 
-            row.appendChild(bubble);
-            messagesEl.appendChild(row);
-            scrollToBottom();
+        limitReached = messagesUsed >= freeLimit;
+        if (limitReached) {
+            limitWarningEl.style.display = "none";
+            limitPaywallEl.style.display = "block";
+            inputEl.disabled = true;
+            sendBtn.disabled = true;
+            inputContainer.style.display = 'none';
+            limitReachedContainer.style.display = 'block';
+            buySmallBtn.style.display = "none";
+        } else {
+            limitWarningEl.style.display = "block";
+            limitPaywallEl.style.display = "none";
+            inputEl.disabled = false;
+            sendBtn.disabled = false;
+            inputContainer.style.display = 'block';
+            limitReachedContainer.style.display = 'none';
+            buySmallBtn.style.display = "inline-flex";
         }
+    }
 
-        function appendTyping() {
-            const row = document.createElement("div");
-            row.className = "message-row assistant";
-            row.id = "typing-row";
-
-            const bubble = document.createElement("div");
-            bubble.className = "message-bubble assistant";
-
-            const ti = document.createElement("div");
-            ti.className = "typing-indicator";
-            ti.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-
-            bubble.appendChild(ti);
-            row.appendChild(bubble);
-
-            messagesEl.appendChild(row);
-            scrollToBottom();
-        }
-
-        function removeTyping() {
-            const row = document.getElementById("typing-row");
-            if (row && row.parentNode) {
-                row.parentNode.removeChild(row);
+    function initTelegramId() {
+        try {
+            const tg = window.Telegram && window.Telegram.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                const id =
+                    (user && user.id) ||
+                    (user && user.username) ||
+                    (user && (user.first_name || "") + "_" + (user.last_name || "")) ||
+                    null;
+                telegramId = id ? String(id) : "anon-" + Math.random().toString(36).slice(2, 10);
+            } else {
+                let storedId = null;
+                try {
+                    storedId = localStorage.getItem('eskd_dev_id');
+                    if (!storedId) {
+                        storedId = 'local-' + Math.random().toString(36).slice(2, 10);
+                        localStorage.setItem('eskd_dev_id', storedId);
+                    }
+                } catch (e) {
+                    storedId = 'local-' + Math.random().toString(36).slice(2, 10);
+                }
+                telegramId = storedId;
             }
+        } catch (e) {
+            console.error("Telegram init error", e);
+            telegramId = "fallback-user";
         }
+    }
 
-        function updateLimitUI() {
+    async function loadUserInfo() {
+        if (!telegramId) return;
+        try {
+            const res = await fetch("/api/user", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegramId })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            messagesUsed = data.messages_used ?? 0;
+            freeLimit = data.free_limit ?? 3;
+            isPremium = !!data.is_premium;
+            premiumUntil = data.premium_until || null;
+
             if (isPremium) {
-                // Премиум — лимитов нет
-                if (premiumBadgeEl) premiumBadgeEl.style.display = "inline";
-                usedEl.textContent = "∞";
-                limitEl.textContent = "∞";
-                remEl.textContent = "∞";
-                progressInner.style.width = "0%";
+                updatePremiumUI();
+            } else {
+                buySmallBtn.style.display = "inline-flex";
+                updateLimitUI();
+            }
+        } catch (e) {
+            console.error("loadUserInfo error", e);
+        }
+    }
 
-                limitWarningEl.textContent = "У вас активна подписка — лимитов нет";
-                limitWarningEl.style.display = "block";
-                limitPaywallEl.style.display = "none";
+    inputEl.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 
-                inputEl.disabled = false;
-                sendBtn.disabled = false;
-                inputContainer.style.display = "block";
-                limitReachedContainer.style.display = "none";
-                limitReached = false;
+    formEl.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.textContent = "";
+
+        const text = inputEl.value.trim();
+        if (!text || isSending || (!isPremium && limitReached) || !telegramId) return;
+
+        appendMessage("user", text);
+        inputEl.value = "";
+        inputEl.style.height = 'auto';
+        isSending = true;
+        sendBtn.disabled = true;
+        appendTyping();
+
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegramId, message: text })
+            });
+
+            removeTyping();
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                if (res.status === 403 && err.error === "limit_reached") {
+                    messagesUsed = err.messages_used ?? messagesUsed;
+                    freeLimit = err.free_limit ?? freeLimit;
+                    isPremium = !!err.is_premium;
+                    updateLimitUI();
+                    errorEl.textContent = err.message || "Лимит сообщений исчерпан.";
+                    return;
+                }
+                errorEl.textContent = err.error || "Ошибка при обращении к серверу.";
                 return;
             }
 
-            if (premiumBadgeEl) premiumBadgeEl.style.display = "none";
+            const data = await res.json();
+            messagesUsed = data.messages_used ?? messagesUsed;
+            freeLimit = data.free_limit ?? freeLimit;
+            isPremium = !!data.is_premium;
+            premiumUntil = data.premium_until || premiumUntil;
 
-            usedEl.textContent = messagesUsed;
-            limitEl.textContent = freeLimit;
-            const remaining = Math.max(0, freeLimit - messagesUsed);
-            remEl.textContent = remaining;
-
-            const percent = freeLimit > 0 ? Math.min(100, (messagesUsed / freeLimit) * 100) : 0;
-            progressInner.style.width = percent + "%";
-
-            limitReached = messagesUsed >= freeLimit;
-            if (limitReached) {
-                limitWarningEl.style.display = "none";
-                limitPaywallEl.style.display = "block";
-                inputEl.disabled = true;
-                sendBtn.disabled = true;
-                inputContainer.style.display = 'none';
-                limitReachedContainer.style.display = 'block';
+            if (isPremium) {
+                updatePremiumUI();
             } else {
-                limitWarningEl.style.display = "block";
-                limitPaywallEl.style.display = "none";
-                inputEl.disabled = false;
+                updateLimitUI();
+            }
+
+            appendMessage("assistant", data.answer || "Пустой ответ от ассистента.");
+        } catch (err) {
+            console.error("send error", err);
+            removeTyping();
+            errorEl.textContent = "Не удалось отправить запрос. Проверьте соединение.";
+        } finally {
+            isSending = false;
+            if (!limitReached || isPremium) {
                 sendBtn.disabled = false;
-                inputContainer.style.display = 'block';
-                limitReachedContainer.style.display = 'none';
             }
         }
+    });
 
-        function initTelegramId() {
-            try {
-                const tg = window.Telegram && window.Telegram.WebApp;
-                if (tg) {
-                    tg.ready();
-                    tg.expand();
-                    const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
-                    const id =
-                        (user && user.id) ||
-                        (user && user.username) ||
-                        (user && (user.first_name || "") + "_" + (user.last_name || "")) ||
-                        null;
-                    telegramId = id ? String(id) : "anon-" + Math.random().toString(36).slice(2, 10);
-                } else {
-                    let storedId = null;
+    async function handleBuyClick() {
+        errorEl.textContent = "";
+        if (!telegramId) {
+            errorEl.textContent = "Не удалось определить Telegram ID.";
+            return;
+        }
+
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if (!tg || !tg.openInvoice) {
+            alert("Покупка доступна только внутри Telegram.");
+            return;
+        }
+
+        if (isBuying) return;
+        isBuying = true;
+        buySmallBtn.disabled = true;
+        buyBigBtn.disabled = true;
+
+        try {
+            const res = await fetch("/api/pay-stars", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegramId })
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                console.error("pay-stars error", err);
+                errorEl.textContent = "Не удалось создать оплату.";
+                return;
+            }
+
+            const data = await res.json();
+            const invoiceUrl = data.invoice_url;
+            if (!invoiceUrl) {
+                errorEl.textContent = "Ошибка при создании счёта.";
+                return;
+            }
+
+            tg.openInvoice(invoiceUrl, async (status) => {
+                console.log("invoice status:", status);
+                if (status === "paid") {
                     try {
-                        storedId = localStorage.getItem('eskd_dev_id');
-                        if (!storedId) {
-                            storedId = 'local-' + Math.random().toString(36).slice(2, 10);
-                            localStorage.setItem('eskd_dev_id', storedId);
-                        }
-                    } catch (e) {
-                        storedId = 'local-' + Math.random().toString(36).slice(2, 10);
-                    }
-                    telegramId = storedId;
-                }
-            } catch (e) {
-                console.error("Telegram init error", e);
-                telegramId = "fallback-user";
-            }
-        }
-
-        async function loadUserInfo() {
-            if (!telegramId) return;
-            try {
-                const res = await fetch("/api/user", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ telegramId })
-                });
-                if (!res.ok) return;
-                const data = await res.json();
-                messagesUsed = data.messages_used ?? 0;
-                freeLimit = data.free_limit ?? 3;
-                isPremium = data.is_premium ?? false;
-                updateLimitUI();
-            } catch (e) {
-                console.error("loadUserInfo error", e);
-            }
-        }
-
-        inputEl.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-
-        formEl.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            errorEl.textContent = "";
-
-            const text = inputEl.value.trim();
-            if (!text || isSending || (limitReached && !isPremium) || !telegramId) return;
-
-            appendMessage("user", text);
-            inputEl.value = "";
-            inputEl.style.height = 'auto';
-            isSending = true;
-            sendBtn.disabled = true;
-            appendTyping();
-
-            try {
-                const res = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ telegramId, message: text })
-                });
-
-                removeTyping();
-
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    if (res.status === 403 && err.error === "limit_reached" && !isPremium) {
-                        messagesUsed = err.messages_used ?? messagesUsed;
-                        freeLimit = err.free_limit ?? freeLimit;
-                        updateLimitUI();
-                        errorEl.textContent = err.message || "Лимит сообщений исчерпан.";
-                        return;
-                    }
-                    errorEl.textContent = err.error || "Ошибка при обращении к серверу.";
-                    return;
-                }
-
-                const data = await res.json();
-                messagesUsed = data.messages_used ?? messagesUsed;
-                freeLimit = data.free_limit ?? freeLimit;
-                // если на бэке уже премиум, можно тоже подхватить
-                if (typeof data.is_premium === "boolean") {
-                    isPremium = data.is_premium;
-                }
-                updateLimitUI();
-
-                appendMessage("assistant", data.answer || "Пустой ответ от ассистента.");
-            } catch (err) {
-                console.error("send error", err);
-                removeTyping();
-                errorEl.textContent = "Не удалось отправить запрос. Проверьте соединение.";
-            } finally {
-                isSending = false;
-                if (!limitReached || isPremium) {
-                    sendBtn.disabled = false;
-                }
-            }
-        });
-
-        // Клик по кнопке "Купить подписку" — Telegram Stars
-        if (buyBtn) {
-            buyBtn.addEventListener('click', async () => {
-                errorEl.textContent = "";
-                if (!telegramId) {
-                    errorEl.textContent = "Ошибка: не удалось определить Telegram ID.";
-                    return;
-                }
-
-                try {
-                    const res = await fetch("/api/pay-stars", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ telegramId })
-                    });
-
-                    const data = await res.json().catch(() => ({}));
-
-                    if (!res.ok) {
-                        errorEl.textContent = data.error || "Не удалось создать платёж.";
-                        return;
-                    }
-
-                    if (data.message && !data.invoice_link) {
-                        errorEl.textContent = data.message;
-                        return;
-                    }
-
-                    if (!data.invoice_link) {
-                        errorEl.textContent = "Не удалось получить ссылку на оплату.";
-                        return;
-                    }
-
-                    const tg = window.Telegram && window.Telegram.WebApp;
-
-                    if (tg && tg.openInvoice) {
-                        tg.openInvoice(data.invoice_link, async (status) => {
-                            if (status === "paid") {
-                                try {
-                                    const r = await fetch("/api/activate-premium", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ telegramId })
-                                    });
-                                    const d = await r.json().catch(() => ({}));
-                                    if (r.ok && d.ok) {
-                                        isPremium = true;
-                                        await loadUserInfo();
-                                        errorEl.textContent = "Подписка активирована. Спасибо!";
-                                    } else {
-                                        errorEl.textContent =
-                                            d.error || "Оплата прошла, но не удалось включить подписку. Напишите в поддержку.";
-                                    }
-                                } catch (e) {
-                                    console.error("activate premium error", e);
-                                    errorEl.textContent =
-                                        "Оплата прошла, но не удалось включить подписку. Попробуйте обновить мини-приложение.";
-                                }
-                            } else if (status === "cancelled") {
-                                errorEl.textContent = "Оплата отменена.";
-                            } else if (status === "failed") {
-                                errorEl.textContent = "Оплата не прошла. Попробуйте ещё раз.";
-                            }
+                        const res2 = await fetch("/api/activate-premium", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ telegramId })
                         });
-                    } else {
-                        window.open(data.invoice_link, "_blank");
+                        if (!res2.ok) {
+                            const e2 = await res2.json().catch(() => ({}));
+                            console.error("activate-premium error", e2);
+                            errorEl.textContent = "Оплата прошла, но не удалось включить премиум. Напишите автору бота.";
+                            return;
+                        }
+                        const info = await res2.json();
+                        isPremium = !!info.is_premium;
+                        premiumUntil = info.premium_until || null;
+                        messagesUsed = 0;
+                        updatePremiumUI();
+                        errorEl.textContent = "";
+                    } catch (e) {
+                        console.error("activate premium error", e);
+                        errorEl.textContent = "Ошибка при активации премиума.";
                     }
-                } catch (e) {
-                    console.error("pay error", e);
-                    errorEl.textContent = "Ошибка при обращении к платёжному серверу.";
+                } else if (status === "cancelled") {
+                    errorEl.textContent = "Оплата отменена.";
+                } else if (status === "failed") {
+                    errorEl.textContent = "Оплата не прошла. Попробуйте ещё раз.";
                 }
             });
+        } catch (e) {
+            console.error("buy error", e);
+            errorEl.textContent = "Не удалось создать покупку. Проверьте интернет.";
+        } finally {
+            isBuying = false;
+            buySmallBtn.disabled = false;
+            buyBigBtn.disabled = false;
         }
+    }
 
-        initTelegramId();
-        updateLimitUI();
-        loadUserInfo();
-    </script>
+    buySmallBtn.addEventListener("click", handleBuyClick);
+    buyBigBtn.addEventListener("click", handleBuyClick);
+
+    initTelegramId();
+    updateLimitUI();
+    loadUserInfo();
+</script>
 </body>
 </html>
