@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Типографика (даёт сразу ощущение “современно”) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,517 +13,430 @@
   <style>
     :root{
       --bg: #0b1220;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.08);
+      --surface: rgba(255,255,255,.06);
+      --surface2: rgba(255,255,255,.09);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --border: rgba(255,255,255,.10);
-      --shadow: 0 18px 60px rgba(0,0,0,.42);
-      --radius: 18px;
+      --muted: rgba(255,255,255,.60);
+      --line: rgba(255,255,255,.08);
 
       --blue: #2b7cff;
       --green: #22c55e;
       --red: #ef4444;
       --amber: #f59e0b;
+
+      --r12: 12px;
+      --r16: 16px;
+      --r20: 20px;
+
+      --shadow: 0 12px 30px rgba(0,0,0,.28);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *{ box-sizing:border-box; margin:0; padding:0; }
     body{
       font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.45;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
 
-    /* Layout */
-    .shell{
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 18px 12px;
+    /* Subtle background */
+    body::before{
+      content:"";
+      position: fixed;
+      inset: -30%;
+      z-index:-1;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(43,124,255,.18), transparent 52%),
+        radial-gradient(circle at 85% 10%, rgba(34,197,94,.12), transparent 55%),
+        radial-gradient(circle at 30% 90%, rgba(139,92,246,.14), transparent 55%);
+      filter: blur(18px);
+      opacity: .9;
     }
 
     .app{
-      width: min(1100px, 100%);
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    /* Desktop split: chat + right panel */
-    @media (min-width: 980px){
-      .shell{ padding: 26px 18px; }
-      .app{
-        grid-template-columns: 560px 1fr;
-        align-items: start;
-      }
-    }
-
-    /* Chat card */
-    .chat{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      min-height: 86vh;
-      display: flex;
+      height: 100vh;
+      display:flex;
       flex-direction: column;
     }
 
     /* Header */
-    .header{
-      padding: 14px 14px 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 12px 14px 10px;
+      background: linear-gradient(180deg, rgba(11,18,32,.92), rgba(11,18,32,.65));
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
     }
-    .headerRow{
-      display: flex;
-      align-items: center;
-      gap: 12px;
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
+
     .logo{
       width: 34px;
       height: 34px;
       border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
       background: rgba(0,0,0,.25);
-      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.08);
+      flex-shrink:0;
     }
-    .logo img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .logo img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    .titleBox{ display:flex; flex-direction: column; gap: 2px; flex: 1; }
+    .brandText{
+      flex:1;
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
     .title{
       font-size: 15px;
       font-weight: 800;
       letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .subtitle{
       font-size: 12px;
       color: var(--muted);
       font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Status strip */
-    .status{
+    /* Status row (compact, modern) */
+    .statusRow{
       margin-top: 10px;
-      display: grid;
-      gap: 8px;
-      padding: 10px;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      background: var(--panel);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--r16);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.06);
     }
 
-    .statusTop{
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 10px;
+    .statusLeft{
+      min-width: 0;
+      display:flex;
+      flex-direction: column;
+      gap: 3px;
     }
+
     .statusLabel{
       font-size: 11px;
-      text-transform: uppercase;
       letter-spacing: .10em;
-      color: var(--muted);
-      font-weight: 700;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      font-weight: 800;
     }
-    .statusCount{
+
+    .statusValue{
       font-size: 12px;
-      font-weight: 700;
+      color: rgba(255,255,255,.80);
+      font-weight: 650;
+    }
+
+    .statusRight{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-shrink:0;
+    }
+
+    .pill{
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
       color: rgba(255,255,255,.85);
     }
 
-    .bar{
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.10);
-      overflow: hidden;
-    }
-    .barFill{
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--green), var(--amber), #f97316, var(--red));
-      transition: width .25s ease;
-    }
-
-    .statusText{
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-    }
-    .premiumBadge{
-      font-size: 12px;
+    .pill.good{
+      border-color: rgba(34,197,94,.30);
+      background: rgba(34,197,94,.12);
       color: #bbf7d0;
-      font-weight: 600;
-      display: none;
     }
 
-    /* Chips */
-    .chips{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
+    .pill.bad{
+      border-color: rgba(239,68,68,.30);
+      background: rgba(239,68,68,.12);
+      color: #fecaca;
     }
+
+    .buySmall{
+      border: none;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 900;
+      font-size: 12px;
+      background: rgba(43,124,255,.95);
+      color: white;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .buySmall:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; }
+
+    /* Chips: modern */
+    .chips{
+      margin-top: 10px;
+      display:flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chips::-webkit-scrollbar{ display:none; }
+
     .chip{
+      flex-shrink:0;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 750;
+      color: rgba(255,255,255,.85);
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.04);
-      color: rgba(255,255,255,.86);
-      font-size: 12px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-      user-select: none;
-      transition: transform .08s ease, background .12s ease, border-color .12s ease;
-      font-weight: 600;
+      cursor:pointer;
+      user-select:none;
     }
-    .chip:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); }
     .chip:active{ transform: translateY(1px); }
 
     /* Messages */
     .messages{
-      flex: 1;
-      padding: 14px;
-      overflow-y: auto;
-      display: flex;
+      flex:1;
+      overflow-y:auto;
+      padding: 14px 14px 10px;
+      display:flex;
       flex-direction: column;
       gap: 10px;
     }
-    .messages::-webkit-scrollbar{ width: 4px; }
-    .messages::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.16); border-radius: 999px; }
+    .messages::-webkit-scrollbar{ width:4px; }
+    .messages::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.14); border-radius: 999px; }
 
     .sys{
-      align-self: center;
-      max-width: 95%;
+      align-self:center;
+      max-width: 94%;
       padding: 10px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.08);
       color: var(--muted);
       font-size: 12px;
-      text-align: center;
+      text-align:center;
     }
 
-    .row{ display: flex; }
-    .row.user{ justify-content: flex-end; }
+    .row{ display:flex; }
+    .row.user{ justify-content:flex-end; }
 
     .bubble{
       max-width: 88%;
       padding: 12px 12px;
-      border-radius: 18px;
+      border-radius: var(--r20);
       font-size: 14px;
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+
     .bubble.user{
       background: rgba(43,124,255,.92);
       color: white;
-      border-bottom-right-radius: 8px;
+      border-bottom-right-radius: 10px;
       box-shadow: 0 10px 22px rgba(0,0,0,.22);
     }
+
     .bubble.assistant{
       background: rgba(255,255,255,.05);
-      color: rgba(255,255,255,.92);
       border: 1px solid rgba(255,255,255,.08);
-      border-bottom-left-radius: 8px;
+      color: rgba(255,255,255,.92);
+      border-bottom-left-radius: 10px;
     }
 
     .typing{
-      display:inline-flex; gap: 6px; align-items:center;
+      display:inline-flex;
+      gap: 6px;
+      align-items:center;
     }
     .dot{
-      width: 6px; height: 6px; border-radius: 999px;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
       background: rgba(255,255,255,.55);
       animation: bounce 1.2s infinite ease-in-out;
     }
-    .dot:nth-child(2){ animation-delay: .12s; }
-    .dot:nth-child(3){ animation-delay: .24s; }
-    @keyframes bounce{ 0%,80%,100%{ transform:translateY(0); opacity:.45 } 40%{ transform:translateY(-3px); opacity:1 } }
+    .dot:nth-child(2){ animation-delay:.12s; }
+    .dot:nth-child(3){ animation-delay:.24s; }
+    @keyframes bounce{
+      0%,80%,100%{ transform:translateY(0); opacity:.45 }
+      40%{ transform:translateY(-3px); opacity:1 }
+    }
 
     /* Composer */
     .composerWrap{
-      padding: 12px 14px 14px;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      padding: 10px 14px 16px;
+      background: linear-gradient(180deg, rgba(11,18,32,0), rgba(11,18,32,.92));
+      backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255,255,255,.06);
-      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.40));
-      backdrop-filter: blur(10px);
     }
 
     .composer{
       display:flex;
       gap: 10px;
-      align-items: flex-end;
+      align-items:flex-end;
       padding: 10px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: var(--panel);
-      box-shadow: 0 14px 40px rgba(0,0,0,.30);
+      border-radius: var(--r20);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
     }
 
     textarea{
       flex: 1;
       border: none;
-      outline: none;
+      outline:none;
       background: transparent;
       color: var(--text);
       font-size: 14px;
-      resize: none;
+      resize:none;
       min-height: 40px;
-      max-height: 130px;
-      line-height: 1.4;
+      max-height: 120px;
+      line-height: 1.35;
     }
     textarea::placeholder{ color: rgba(255,255,255,.45); }
+    textarea:disabled{ opacity:.65; }
 
     .send{
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 999px;
       border: none;
-      cursor: pointer;
-      background: rgba(34,197,94,.95);
-      color: white;
-      font-weight: 900;
+      background: rgba(34,197,94,.96);
+      color:white;
       font-size: 16px;
-      display: grid;
-      place-items: center;
-      box-shadow: 0 12px 26px rgba(0,0,0,.30);
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: 0 12px 24px rgba(0,0,0,.28);
     }
-    .send:disabled{ opacity: .6; cursor: not-allowed; }
+    .send:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; }
 
     .foot{
       margin-top: 10px;
-      text-align: center;
+      text-align:center;
       font-size: 11px;
       color: var(--muted);
     }
-
     .error{
       margin-top: 8px;
       min-height: 16px;
-      text-align: center;
+      text-align:center;
       font-size: 12px;
       color: #fecaca;
     }
 
-    /* Paywall */
+    /* Paywall sheet */
     .paywall{
-      margin: 12px 14px 14px;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(239,68,68,.22);
+      margin-top: 10px;
+      padding: 12px 12px;
+      border-radius: var(--r16);
+      border: 1px solid rgba(239,68,68,.20);
       background: rgba(239,68,68,.08);
-      text-align: center;
-      display: none;
+      display:none;
+      text-align:center;
     }
-    .paywallTitle{ font-weight: 800; color: #fecaca; }
-    .paywallText{ margin-top: 6px; font-size: 13px; color: var(--muted); }
-    .buy{
+    .payTitle{ font-weight: 900; color: #fecaca; font-size: 13px; }
+    .payText{ margin-top: 6px; font-size: 12px; color: var(--muted); }
+    .buyBig{
       margin-top: 10px;
       width: 100%;
+      border: none;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(43,124,255,.92);
-      color: white;
-      font-weight: 800;
       padding: 12px 14px;
-      cursor: pointer;
-    }
-    .buy:disabled{ opacity: .6; cursor: not-allowed; }
-
-    /* Right panel (desktop) */
-    .side{
-      display: none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius);
+      font-weight: 900;
+      font-size: 13px;
+      background: rgba(43,124,255,.95);
+      color:white;
+      cursor:pointer;
       box-shadow: var(--shadow);
-      overflow: hidden;
     }
-    @media (min-width: 980px){
-      .side{ display: block; }
-    }
-
-    .sideHeader{
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
-    }
-    .sideTitle{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .2px;
-    }
-    .sideSub{
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    .sideBody{
-      padding: 14px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .card{
-      border: 1px solid rgba(255,255,255,.08);
-      background: var(--panel);
-      border-radius: 16px;
-      padding: 12px;
-    }
-    .cardTitle{
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .10em;
-      color: var(--muted);
-    }
-    .cardText{
-      margin-top: 8px;
-      font-size: 13px;
-      color: rgba(255,255,255,.88);
-      line-height: 1.45;
-    }
-
-    .examples{
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .ex{
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      border-radius: 12px;
-      padding: 10px;
-      cursor: pointer;
-      transition: background .12s ease, border-color .12s ease;
-      font-size: 13px;
-      color: rgba(255,255,255,.88);
-    }
-    .ex:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); }
+    .buyBig:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; }
   </style>
 </head>
 
 <body>
-<div class="shell">
   <div class="app">
-    <!-- CHAT -->
-    <div class="chat">
-      <div class="header">
-        <div class="headerRow">
-          <div class="logo"><img src="/logo.png" alt="logo"></div>
-          <div class="titleBox">
-            <div class="title">ЕСКД Ассистент</div>
-            <div class="subtitle" id="header-subtitle">Эксперт по ЕСКД / ГОСТ / маркировке</div>
-          </div>
-        </div>
-
-        <div class="status">
-          <div class="statusTop">
-            <div class="statusLabel" id="limit-label">Бесплатные обращения</div>
-            <div class="statusCount"><span id="used">0</span>/<span id="limit">3</span></div>
-          </div>
-
-          <div class="bar"><div class="barFill" id="limit-progress-inner" style="width:0%"></div></div>
-
-          <div class="statusText">
-            <div id="limit-warning">Осталось <span id="remaining">3</span> обращения</div>
-            <div class="premiumBadge" id="premium-badge"></div>
-          </div>
-
-          <button class="buy" id="buy-small" type="button" style="display:none">
-            ⭐ Премиум на месяц — 129 звёзд
-          </button>
-
-          <div class="chips" id="chips">
-            <div class="chip" data-text="Рамка и основная надпись (ЕСКД). Формат А3. Что нужно сделать правильно?">Рамка/штамп</div>
-            <div class="chip" data-text="Шрифт на чертеже по ЕСКД: высоты, тип, применение. Дай алгоритм и ГОСТ.">Шрифты</div>
-            <div class="chip" data-text="Форматы листов по ЕСКД (А0–А4): выбор, ориентация, поля.">Форматы</div>
-            <div class="chip" data-text="Маркировка товара: что обязательно на упаковке для ЕАЭС. Сначала задай уточняющие вопросы.">Маркировка</div>
-            <div class="chip" data-text="Салфетки. Нужна маркировка на упаковке для ЕАЭС: состав/назначение/производитель. Что обязательно?">Салфетки</div>
-            <div class="chip" data-text="Майонез. Нужна маркировка/этикетка для ЕАЭС: что обязательно, какие нормы и ссылки.">Майонез</div>
-          </div>
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"><img src="/logo.png" alt="logo"></div>
+        <div class="brandText">
+          <div class="title">ЕСКД Ассистент</div>
+          <div class="subtitle" id="header-subtitle">Эксперт по ЕСКД / ГОСТ / маркировке</div>
         </div>
       </div>
 
-      <div class="messages" id="messages">
-        <div class="sys">
-          Пиши коротко или как получится — если данных мало, я уточню ровно то, что нужно. На ПК справа есть примеры.
+      <div class="statusRow">
+        <div class="statusLeft">
+          <div class="statusLabel" id="limit-label">Бесплатные обращения</div>
+          <div class="statusValue" id="status-value">
+            Использовано: <span id="used">0</span> из <span id="limit">3</span>
+          </div>
+        </div>
+
+        <div class="statusRight">
+          <div class="pill" id="status-pill">Осталось: <span id="remaining">3</span></div>
+          <button class="buySmall" id="buy-small" type="button" style="display:none">⭐ 129</button>
         </div>
       </div>
 
-      <div class="composerWrap" id="composer-wrap">
-        <form class="composer" id="chat-form">
-          <textarea id="chat-input" placeholder="Напиши вопрос… (например: «салфетки — маркировка для ЕАЭС»)" rows="1"></textarea>
-          <button class="send" id="send-btn" type="submit" title="Отправить">➤</button>
-        </form>
-        <div class="foot">
-          Ответы справочные — перед оформлением сверяйтесь с официальными текстами стандартов.
-        </div>
-        <div class="error" id="error"></div>
-
-        <div class="paywall" id="paywall">
-          <div class="paywallTitle">Лимит исчерпан</div>
-          <div class="paywallText">Оформите премиум и задавайте вопросы без ограничений.</div>
-          <button class="buy" id="buy-big" type="button">⭐ Премиум на месяц — 129 звёзд</button>
-        </div>
+      <div class="chips" id="chips">
+        <div class="chip" data-text="Салфетки — маркировка для ЕАЭС. Что обязательно на упаковке? Сначала уточни тип салфеток и назначение.">Салфетки</div>
+        <div class="chip" data-text="Майонез — маркировка для ЕАЭС. Что обязательно на этикетке?">Майонез</div>
+        <div class="chip" data-text="ЕСКД — рамка и основная надпись. Формат А3. Дай алгоритм и ГОСТы.">Рамка/штамп</div>
+        <div class="chip" data-text="ЕСКД — шрифты на чертеже: высоты, применение, частые ошибки.">Шрифты</div>
+        <div class="chip" data-text="ЕСКД — форматы листов А0–А4: выбор, ориентация, поля.">Форматы</div>
+        <div class="chip" data-text="Маркировка товара для ЕАЭС: обязательные элементы на упаковке, порядок, типичные ошибки.">Маркировка</div>
       </div>
     </div>
 
-    <!-- RIGHT PANEL (Desktop) -->
-    <aside class="side">
-      <div class="sideHeader">
-        <div class="sideTitle">Инструмент инженера + умный чат</div>
-        <div class="sideSub">Быстрые примеры, чтобы получать “нормальные” ответы с первого раза.</div>
+    <div class="messages" id="messages">
+      <div class="sys">
+        Пиши как удобно. Если данных мало — уточню по делу и дам готовый алгоритм.
       </div>
-      <div class="sideBody">
-        <div class="card">
-          <div class="cardTitle">Как формулировать</div>
-          <div class="cardText">
-            1) Объект (что именно)<br>
-            2) Цель (что нужно получить)<br>
-            3) Контекст (ЕАЭС/РФ, тип документа, формат, материал и т.п.)
-          </div>
-        </div>
+    </div>
 
-        <div class="card">
-          <div class="cardTitle">Примеры</div>
-          <div class="examples">
-            <div class="ex" data-ex="Сборочный чертёж. Как оформлять спецификацию: порядок позиций, обозначения, что обязательно?">
-              Сборочный → спецификация
-            </div>
-            <div class="ex" data-ex="Деталь, формат А4. Какие поля, рамка и основная надпись нужны? Дай алгоритм и ГОСТы.">
-              Деталь → А4 рамка/штамп
-            </div>
-            <div class="ex" data-ex="Салфетки влажные в пластиковой упаковке. Маркировка для ЕАЭС: что обязательно, какие ТР/ГОСТ, что открыть в тексте.">
-              Влажные салфетки → маркировка ЕАЭС
-            </div>
-            <div class="ex" data-ex="Пищевая продукция: как правильно написать состав и пищевую ценность на этикетке (ЕАЭС)? Какие обязательные элементы?">
-              Еда → состав/пищевая ценность
-            </div>
-          </div>
-        </div>
+    <div class="composerWrap">
+      <form class="composer" id="chat-form">
+        <textarea id="chat-input" placeholder="Напиши вопрос… (например: «салфетки — маркировка ЕАЭС»)" rows="1"></textarea>
+        <button class="send" id="send-btn" type="submit">➤</button>
+      </form>
 
-        <div class="card">
-          <div class="cardTitle">Совет</div>
-          <div class="cardText">
-            Если вы пишете одно слово (“салфетки”), я уточню. Но если вы сразу дадите связку
-            “салфетки — маркировка — ЕАЭС”, ответ будет сразу в цель.
-          </div>
-        </div>
+      <div class="paywall" id="paywall">
+        <div class="payTitle">Лимит исчерпан</div>
+        <div class="payText">Оформите премиум и задавайте вопросы без ограничений.</div>
+        <button class="buyBig" id="buy-big" type="button">⭐ Премиум на месяц — 129 звёзд</button>
       </div>
-    </aside>
+
+      <div class="foot">
+        Ответы справочные — перед оформлением сверяйтесь с официальными текстами.
+      </div>
+      <div class="error" id="error"></div>
+    </div>
   </div>
-</div>
 
 <script>
   const messagesEl = document.getElementById("messages");
@@ -532,44 +444,43 @@
   const inputEl = document.getElementById("chat-input");
   const sendBtn = document.getElementById("send-btn");
   const errorEl = document.getElementById("error");
-  const buySmallBtn = document.getElementById("buy-small");
-  const buyBigBtn = document.getElementById("buy-big");
-  const premiumBadgeEl = document.getElementById("premium-badge");
+
   const headerSubtitleEl = document.getElementById("header-subtitle");
   const limitLabelEl = document.getElementById("limit-label");
-  const paywallEl = document.getElementById("paywall");
-
   const usedEl = document.getElementById("used");
   const limitEl = document.getElementById("limit");
   const remEl = document.getElementById("remaining");
-  const progressInner = document.getElementById("limit-progress-inner");
-  const limitWarningEl = document.getElementById("limit-warning");
+  const statusValueEl = document.getElementById("status-value");
+  const statusPillEl = document.getElementById("status-pill");
+
+  const buySmallBtn = document.getElementById("buy-small");
+  const buyBigBtn = document.getElementById("buy-big");
+  const paywallEl = document.getElementById("paywall");
 
   let telegramId = null;
   let messagesUsed = 0;
   let freeLimit = 3;
   let isPremium = false;
   let premiumUntil = null;
+
   let isSending = false;
   let isBuying = false;
   let limitReached = false;
 
-  // === “Умная склейка” коротких ответов после уточняющего вопроса ===
-  // если бэк вернул needs_clarification: true — запоминаем исходный запрос,
-  // и следующий короткий ответ (типа "маркировка") клеим в "Салфетки — маркировка"
+  // умная склейка уточнений
   let pendingClarify = null; // { base: "салфетки" }
 
-  // мини-история на клиенте (чтобы бот отвечал более “разумно”)
-  // отправляем 6 последних сообщений (user/assistant) на бэк, если он умеет принимать history
+  // короткая память на клиенте
   const HISTORY_MAX = 6;
   const history = []; // {role, content}
-
   function pushHistory(role, content){
     history.push({ role, content });
     while (history.length > HISTORY_MAX) history.shift();
   }
 
-  function scrollToBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
 
   function appendMessage(role, content) {
     const row = document.createElement("div");
@@ -616,14 +527,14 @@
       const dt = formatDateDDMMYY(premiumUntil);
       headerSubtitleEl.textContent = `Премиум до ${dt}`;
       limitLabelEl.textContent = "Премиум";
-      premiumBadgeEl.style.display = "block";
-      premiumBadgeEl.textContent = `Активен до ${dt}`;
-
+      statusValueEl.innerHTML = `Без ограничений`;
       usedEl.textContent = "∞";
       limitEl.textContent = "∞";
       remEl.textContent = "∞";
-      progressInner.style.width = "0%";
-      limitWarningEl.textContent = "Без ограничений";
+
+      statusPillEl.className = "pill good";
+      statusPillEl.textContent = "Активен";
+
       buySmallBtn.style.display = "none";
       paywallEl.style.display = "none";
 
@@ -633,7 +544,6 @@
       return;
     }
 
-    premiumBadgeEl.style.display = "none";
     headerSubtitleEl.textContent = "Эксперт по ЕСКД / ГОСТ / маркировке";
     limitLabelEl.textContent = "Бесплатные обращения";
 
@@ -643,20 +553,21 @@
     const remaining = Math.max(0, freeLimit - messagesUsed);
     remEl.textContent = remaining;
 
-    const percent = freeLimit > 0 ? Math.min(100, (messagesUsed / freeLimit) * 100) : 0;
-    progressInner.style.width = percent + "%";
+    statusValueEl.innerHTML = `Использовано: <span id="used">${messagesUsed}</span> из <span id="limit">${freeLimit}</span>`;
 
     limitReached = messagesUsed >= freeLimit;
 
     if (limitReached) {
-      limitWarningEl.textContent = "Лимит исчерпан";
+      statusPillEl.className = "pill bad";
+      statusPillEl.textContent = "Лимит исчерпан";
       buySmallBtn.style.display = "none";
       paywallEl.style.display = "block";
       inputEl.disabled = true;
       sendBtn.disabled = true;
     } else {
-      limitWarningEl.textContent = `Осталось ${remaining} обращения`;
-      buySmallBtn.style.display = "block";
+      statusPillEl.className = "pill";
+      statusPillEl.textContent = `Осталось: ${remaining}`;
+      buySmallBtn.style.display = "inline-block";
       paywallEl.style.display = "none";
       inputEl.disabled = false;
       sendBtn.disabled = false;
@@ -670,7 +581,7 @@
         tg.ready();
         tg.expand();
 
-        // подтягиваем Telegram theme params
+        // адаптация к теме Telegram
         const p = tg.themeParams || {};
         if (p.bg_color) document.documentElement.style.setProperty('--bg', p.bg_color);
         if (p.text_color) document.documentElement.style.setProperty('--text', p.text_color);
@@ -679,7 +590,7 @@
         const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
         telegramId = user?.id ? String(user.id) : ("anon-" + Math.random().toString(36).slice(2, 10));
       } else {
-        // dev / browser mode
+        // dev mode
         let stored = null;
         try {
           stored = localStorage.getItem('eskd_dev_id');
@@ -723,41 +634,34 @@
     this.style.height = (this.scrollHeight) + 'px';
   });
 
-  function normalizeShortReply(text){
-    const t = String(text || '').trim().toLowerCase();
-    if (!t) return t;
-    // маппинг “вместо цифры”
-    if (t === 'маркировка') return 'маркировка';
-    if (t === 'упаковка') return 'упаковка';
-    if (t === 'состав') return 'состав';
-    if (t === 'ескд') return 'ескд';
-    return t;
+  function normalizeShort(text){
+    const t = String(text || '').trim();
+    return t.toLowerCase();
   }
 
   function applyClarifyGlue(userText){
     if (!pendingClarify) return userText;
-
-    const short = normalizeShortReply(userText);
-    // если ответ короткий (одно слово/цифра) — приклеим к базовому запросу
+    const short = normalizeShort(userText);
     const isShort = short.length <= 18 && short.split(/\s+/).filter(Boolean).length <= 2;
     if (!isShort) { pendingClarify = null; return userText; }
-
-    const glued = `${pendingClarify.base} — ${userText}`; // магия: “салфетки — маркировка”
+    const glued = `${pendingClarify.base} — ${userText}`;
     pendingClarify = null;
     return glued;
   }
 
   async function sendMessage(text) {
     errorEl.textContent = "";
-    if (!text || isSending || (!isPremium && limitReached) || !telegramId) return;
+    const clean = String(text || "").trim();
+    if (!clean || isSending || (!isPremium && limitReached) || !telegramId) return;
 
-    const finalText = applyClarifyGlue(text);
+    const finalText = applyClarifyGlue(clean);
 
-    appendMessage("user", text);
+    appendMessage("user", clean);
     pushHistory("user", finalText);
 
     inputEl.value = "";
     inputEl.style.height = 'auto';
+
     isSending = true;
     sendBtn.disabled = true;
     appendTyping();
@@ -766,7 +670,6 @@
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // history — опционально, бэк может не использовать, но это задел на “разум”
         body: JSON.stringify({ telegramId, message: finalText, history })
       });
 
@@ -787,32 +690,25 @@
       }
 
       const data = await res.json();
-      if (data.ok === false) {
-        errorEl.textContent = (data.error && data.error.message) || "Ошибка.";
-        return;
-      }
-
       messagesUsed = data.messages_used ?? messagesUsed;
       freeLimit = data.free_limit ?? freeLimit;
       isPremium = !!data.is_premium;
       premiumUntil = data.premium_until || premiumUntil;
-
       updateUI();
 
       const ans = data.answer || "Пустой ответ.";
       appendMessage("assistant", ans);
       pushHistory("assistant", ans);
 
-      // если бэк сказал “нужно уточнение” — запомним ИСХОДНЫЙ базовый запрос (до клея)
       if (data.needs_clarification) {
-        pendingClarify = { base: text.trim() || finalText.trim() };
+        pendingClarify = { base: clean };
       } else {
         pendingClarify = null;
       }
-    } catch (err) {
-      console.error("send error", err);
+    } catch (e) {
+      console.error("send error", e);
       removeTyping();
-      errorEl.textContent = "Не удалось отправить запрос. Проверьте соединение.";
+      errorEl.textContent = "Не удалось отправить запрос. Проверьте интернет.";
     } finally {
       isSending = false;
       if (!limitReached || isPremium) sendBtn.disabled = false;
@@ -821,25 +717,15 @@
 
   formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const text = inputEl.value.trim();
-    await sendMessage(text);
+    await sendMessage(inputEl.value);
   });
 
-  // chips
   document.getElementById("chips").addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
     if (!chip) return;
     const txt = chip.getAttribute("data-text");
     if (!txt) return;
     sendMessage(txt);
-  });
-
-  // right panel examples
-  document.querySelectorAll(".ex").forEach(el => {
-    el.addEventListener("click", () => {
-      const txt = el.getAttribute("data-ex");
-      if (txt) sendMessage(txt);
-    });
   });
 
   async function handleBuyClick() {
@@ -877,7 +763,6 @@
         if (status === "paid") {
           errorEl.textContent = "Оплата прошла. Обновляю статус…";
 
-          // несколько попыток, чтобы вебхук успел включить премиум
           let tries = 0;
           const timer = setInterval(async () => {
             tries++;
@@ -894,6 +779,7 @@
           errorEl.textContent = "Оплата не прошла. Попробуйте ещё раз.";
         }
       });
+
     } catch (e) {
       console.error("buy error", e);
       errorEl.textContent = "Не удалось создать покупку. Проверьте интернет.";
@@ -907,7 +793,6 @@
   buySmallBtn.addEventListener("click", handleBuyClick);
   buyBigBtn.addEventListener("click", handleBuyClick);
 
-  // init
   initTelegramId();
   loadUserInfo();
   updateUI();
